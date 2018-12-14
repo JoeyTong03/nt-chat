@@ -19,6 +19,9 @@ public:
 
 private:
 
+	/* QT 动作 */
+	void SendMessage();
+
 	/* 三个窗口 */
 	GroupChat_GroupMemberWidget* gGroupMember; //当前群成员
 	GroupChat_SendMessageWidget* gSendMessage; //发送消息窗口
@@ -28,5 +31,8 @@ private:
 	QVBoxLayout* gLeftLayout;
 
 	QHBoxLayout* Layout;
+
+	/* 参数 */
+	QString username = "MiaoMiaoYang";
 
 };

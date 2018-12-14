@@ -45,10 +45,19 @@ GroupChat_SendMessageWidget::GroupChat_SendMessageWidget(QWidget *parent)
 
 GroupChat_SendMessageWidget::~GroupChat_SendMessageWidget()
 {
+
+}
+
+//得到了文本框的内容
+QString GroupChat_SendMessageWidget::GetMessage()
+{
+	QString tmp = SendText_TextEdit->toHtml();
+	SendText_TextEdit->clear();
+	return tmp;
 }
 
 
-#define TEST_GROUPCHAT_SENDMESSAGE
+//#define TEST_GROUPCHAT_SENDMESSAGE
 #ifdef TEST_GROUPCHAT_SENDMESSAGE
 
 #include <QtWidgets/QApplication>

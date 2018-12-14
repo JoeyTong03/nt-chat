@@ -21,8 +21,7 @@ MainWidget::~MainWidget()
 {
 }
 
-//#define TEST_MAINWIDGET
-
+#define TEST_MAINWIDGET
 #ifdef TEST_MAINWIDGET
 
 #include <QtWidgets/QApplication>

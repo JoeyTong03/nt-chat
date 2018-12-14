@@ -19,6 +19,23 @@ GroupChatWidget::GroupChatWidget(QWidget *parent)
 		Layout->addLayout(gLeftLayout,5);
 		Layout->addWidget(gGroupMember,2);
 	}
+
+	//Qt动作
+	{
+		//确认按钮发送，发送消息
+		QObject::connect(
+			gSendMessage->cCertify_PushButton,
+			&QPushButton::clicked,
+			this,
+			&GroupChatWidget::SendMessage);
+	}
+
+}
+
+void GroupChatWidget::SendMessage()
+{
+	QString text = gSendMessage->GetMessage();
+	gShowMessgae->Add_Message(username, text, GroupChat_MessageWidget::MTMe);
 }
 
 GroupChatWidget::~GroupChatWidget()

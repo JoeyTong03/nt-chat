@@ -12,6 +12,8 @@ public:
 	GroupChat_SendMessageWidget(QWidget *parent = Q_NULLPTR);
 	~GroupChat_SendMessageWidget();
 
+	QString GetMessage();
+
 private:
 
 	//表情图标文件
@@ -35,5 +37,5 @@ private:
 	//总布局
 	QVBoxLayout* Layout;
 
-
+	friend class GroupChatWidget;
 };
