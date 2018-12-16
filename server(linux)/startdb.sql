@@ -21,6 +21,7 @@ use GroupChat;
 
 -- ----------------------------
 -- Table structure for `user`
+-- 用户表
 -- ----------------------------
 drop Table if exists user;
 create Table user(
@@ -35,4 +36,15 @@ insert into user (username,keyword) values
 ('MiaoMiaoYang','123456'),
 ('zhengxuanci' ,'123456'),
 ('tongjiayan'  ,'123456');
+
+-- ----------------------------
+-- Table structure for `onlineuser`
+-- 当前用户表
+-- ----------------------------
+drop Table if exists onlineuser;
+create Table onlineuser(
+    username varchar(16) not null,       /* 用户名，最大16字节 */
+    PRIMARY KEY (username)
+)character set=gbk;
+
 

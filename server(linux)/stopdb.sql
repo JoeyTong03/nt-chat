@@ -16,3 +16,4 @@ Date: 2018-12-15 23:46:11
 -- Database structure for `GroupChat`
 -- ----------------------------
 drop Database if exists GroupChat;
+
