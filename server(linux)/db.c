@@ -1,50 +1,118 @@
 //mysql_demo.cpp
 
-#include <mysql.h> // mysqlç‰¹æœ‰
+#include <mysql.h> // mysqlÌØÓĞ
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
 
 enum RETURNTYPE
 {
-    TRUE,
-    FALSE
+    FALSE,
+    TRUE
 };
 
-//åˆå§‹åŒ–æ•°æ®åº“
+//³õÊ¼»¯Êı¾İ¿â
 enum RETURNTYPE InitDatabase(MYSQL **_mysql)
 {
-    /* åˆå§‹åŒ– mysql å˜é‡ï¼Œå¤±è´¥è¿”å›NULL */
+    /* ³õÊ¼»¯ mysql ±äÁ¿£¬Ê§°Ü·µ»ØNULL */
     if ((*_mysql = mysql_init(NULL)) == NULL)
     {
         printf("mysql_init failed\n");
         return -1;
     }
 
-    /* è¿æ¥æ•°æ®åº“ï¼Œå¤±è´¥è¿”å›NULL
-       1ã€mysqldæ²¡è¿è¡Œ
-       2ã€æ²¡æœ‰æŒ‡å®šåç§°çš„æ•°æ®åº“å­˜åœ¨ */
+    /* Á¬½ÓÊı¾İ¿â£¬Ê§°Ü·µ»ØNULL
+       1¡¢mysqldÃ»ÔËĞĞ
+       2¡¢Ã»ÓĞÖ¸¶¨Ãû³ÆµÄÊı¾İ¿â´æÔÚ */
     if (mysql_real_connect(*_mysql, "localhost", "root", "123456", "GroupChat", 0, NULL, 0) == NULL)
     {
         printf("mysql_real_connect failed(%s)", mysql_error(*_mysql));
         return FALSE;
     }
 
-    /* è®¾ç½®å­—ç¬¦é›†ï¼Œå¦åˆ™è¯»å‡ºçš„å­—ç¬¦ä¹±ç ï¼Œå³ä½¿/etc/my.cnfä¸­è®¾ç½®ä¹Ÿä¸è¡Œ */
+    /* ÉèÖÃ×Ö·û¼¯£¬·ñÔò¶Á³öµÄ×Ö·ûÂÒÂë£¬¼´Ê¹/etc/my.cnfÖĞÉèÖÃÒ²²»ĞĞ */
     mysql_set_character_set(*_mysql, "gbk");
 
     return TRUE;
 }
 
-//åˆ¤æ–­ç”¨æˆ·å¯†ç æ˜¯å¦æ­£ç¡®
-enum RETURNTYPE JudgeUser(MYSQL *_mysql, char *_username, char *_keyword)
+//ÅĞ¶Ï¸ÃÓÃ»§ÊÇ²»ÊÇÊ×´ÎµÇÂ½
+enum RETURNTYPE JudgeFirstLog(MYSQL *_mysql, char *_username)
 {
     MYSQL_RES *result;
     MYSQL_ROW row;
 
-    /* è¿›è¡ŒæŸ¥è¯¢ï¼ŒæˆåŠŸè¿”å›0ï¼Œä¸æˆåŠŸé0
-    1ã€æŸ¥è¯¢å­—ç¬¦ä¸²å­˜åœ¨è¯­æ³•é”™è¯¯
-    2ã€æŸ¥è¯¢ä¸å­˜åœ¨çš„æ•°æ®è¡¨ */
+    /* ½øĞĞ²éÑ¯£¬³É¹¦·µ»Ø0£¬²»³É¹¦·Ç0
+    1¡¢²éÑ¯×Ö·û´®´æÔÚÓï·¨´íÎó
+    2¡¢²éÑ¯²»´æÔÚµÄÊı¾İ±í */
+    char sql[200];
+    sprintf(
+        sql,
+        "select firstlog from user where username='%s'",
+        _username);
+
+    if (mysql_query(_mysql, sql))
+    {
+        printf("mysql_query_connect failed(%s)", mysql_error(_mysql));
+        return -1;
+    }
+
+    /* ½«²éÑ¯½á¹û´æ´¢ÆğÀ´£¬³öÏÖ´íÎóÔò·µ»ØNULL
+       ×¢Òâ£º²éÑ¯½á¹ûÎªNULL£¬²»»á·µ»ØNULL */
+    if ((result = mysql_store_result(_mysql)) == NULL)
+    {
+        printf("mysql_store_result failed");
+        return -1;
+    }
+
+    /* Ñ­»·¶ÁÈ¡ËùÓĞÂú×ãÌõ¼şµÄ¼ÇÂ¼
+       1¡¢·µ»ØµÄÁĞË³ĞòÓëselectÖ¸¶¨µÄÁĞË³ĞòÏàÍ¬£¬´Órow[0]¿ªÊ¼
+       2¡¢²»ÂÛÊı¾İ¿âÖĞÊÇÊ²Ã´ÀàĞÍ£¬CÖĞ¶¼µ±×÷ÊÇ×Ö·û´®À´½øĞĞ´¦Àí£¬Èç¹ûÓĞ±ØÒª£¬ĞèÒª×Ô¼º½øĞĞ×ª»»
+       3¡¢¸ù¾İ×Ô¼ºµÄĞèÒª×éÖ¯Êä³ö¸ñÊ½ */
+    int resultnum = 0;
+    while ((row = mysql_fetch_row(result)) != NULL)
+    {
+        resultnum = atoi(row[0]);
+    }
+
+    if (resultnum == 1)
+    {
+        //Ê×´ÎµÇÂ½ - ½«Êı¾İ¿âĞ´
+        char tmpsql[200];
+        sprintf(
+            tmpsql,
+            "update user set firstlog=false where username='%s';",
+            _username
+        );
+
+        if (mysql_query(_mysql, tmpsql))
+        {
+            printf("mysql_query_connect failed(%s)", mysql_error(_mysql));
+            return -1;
+        }
+
+        /* ÊÍ·Åresult */
+        mysql_free_result(result);
+
+        return TRUE;
+    }
+    else
+    {
+        /* ÊÍ·Åresult */
+        mysql_free_result(result);
+        return FALSE;
+    }
+}
+
+//ÅĞ¶ÏÓÃ»§ÃÜÂëÊÇ·ñÕıÈ· 1-ÕıÈ· 2-ÃÜÂë´íÎó 3-ÓÃ»§Ãû²»´æÔÚ 4-Ê×´ÎµÇÂ½ĞèÒª¸ÄÃÜ[Ç°Ìá£ºÓÃ»§ÃûÓëÃÜÂëÕıÈ·]
+int JudgeUser(MYSQL *_mysql, char *_username, char *_keyword)
+{
+    MYSQL_RES *result;
+    MYSQL_ROW row;
+
+    /* ½øĞĞ²éÑ¯£¬³É¹¦·µ»Ø0£¬²»³É¹¦·Ç0
+    1¡¢²éÑ¯×Ö·û´®´æÔÚÓï·¨´íÎó
+    2¡¢²éÑ¯²»´æÔÚµÄÊı¾İ±í */
     char sql[200];
     sprintf(
         sql,
@@ -58,108 +126,122 @@ enum RETURNTYPE JudgeUser(MYSQL *_mysql, char *_username, char *_keyword)
         return -1;
     }
 
-    /* å°†æŸ¥è¯¢ç»“æœå­˜å‚¨èµ·æ¥ï¼Œå‡ºç°é”™è¯¯åˆ™è¿”å›NULL
-       æ³¨æ„ï¼šæŸ¥è¯¢ç»“æœä¸ºNULLï¼Œä¸ä¼šè¿”å›NULL */
+    /* ½«²éÑ¯½á¹û´æ´¢ÆğÀ´£¬³öÏÖ´íÎóÔò·µ»ØNULL
+       ×¢Òâ£º²éÑ¯½á¹ûÎªNULL£¬²»»á·µ»ØNULL */
     if ((result = mysql_store_result(_mysql)) == NULL)
     {
         printf("mysql_store_result failed");
         return -1;
     }
 
-    /* æ‰“å°å½“å‰æŸ¥è¯¢åˆ°çš„è®°å½•çš„æ•°é‡ */
+    /* ´òÓ¡µ±Ç°²éÑ¯µ½µÄ¼ÇÂ¼µÄÊıÁ¿ */
     //printf("select return %d records\n",mysql_num_rows(result));
 
-    /* å¾ªç¯è¯»å–æ‰€æœ‰æ»¡è¶³æ¡ä»¶çš„è®°å½•
-       1ã€è¿”å›çš„åˆ—é¡ºåºä¸selectæŒ‡å®šçš„åˆ—é¡ºåºç›¸åŒï¼Œä»row[0]å¼€å§‹
-       2ã€ä¸è®ºæ•°æ®åº“ä¸­æ˜¯ä»€ä¹ˆç±»å‹ï¼ŒCä¸­éƒ½å½“ä½œæ˜¯å­—ç¬¦ä¸²æ¥è¿›è¡Œå¤„ç†ï¼Œå¦‚æœæœ‰å¿…è¦ï¼Œéœ€è¦è‡ªå·±è¿›è¡Œè½¬æ¢
-       3ã€æ ¹æ®è‡ªå·±çš„éœ€è¦ç»„ç»‡è¾“å‡ºæ ¼å¼ */
+    /* Ñ­»·¶ÁÈ¡ËùÓĞÂú×ãÌõ¼şµÄ¼ÇÂ¼
+       1¡¢·µ»ØµÄÁĞË³ĞòÓëselectÖ¸¶¨µÄÁĞË³ĞòÏàÍ¬£¬´Órow[0]¿ªÊ¼
+       2¡¢²»ÂÛÊı¾İ¿âÖĞÊÇÊ²Ã´ÀàĞÍ£¬CÖĞ¶¼µ±×÷ÊÇ×Ö·û´®À´½øĞĞ´¦Àí£¬Èç¹ûÓĞ±ØÒª£¬ĞèÒª×Ô¼º½øĞĞ×ª»»
+       3¡¢¸ù¾İ×Ô¼ºµÄĞèÒª×éÖ¯Êä³ö¸ñÊ½ */
     int resultnum = 0;
     while ((row = mysql_fetch_row(result)) != NULL)
     {
         resultnum = atoi(row[0]);
     }
 
-    /* é‡Šæ”¾result */
-    mysql_free_result(result);
-
     if (resultnum == 1)
-        return TRUE;
+    {
+        /* ÓÃ»§ÃûºÍÃÜÂëÕıÈ·£¬ÅĞ¶ÏÊÇ²»ÊÇÊ×´ÎµÇÂ½£¬Ğè²»ĞèÒª¸ÄÃÜ */
+        if (JudgeFirstLog(_mysql, _username) == TRUE)
+        {
+            /* ÊÍ·Åresult */
+            mysql_free_result(result);
+
+            //Ê×´ÎµÇÂ½£¬ĞèÒª¸ÄÃÜ
+            return 4;
+        }
+        else
+        {
+            /* ÊÍ·Åresult */
+            mysql_free_result(result);
+
+            return 1;
+        }
+    }
     else
-        return FALSE;
-}
-
-//åˆ¤æ–­è¯¥ç”¨æˆ·æ˜¯ä¸æ˜¯é¦–æ¬¡ç™»é™†
-enum RETURNTYPE JudgeFirstLog(MYSQL *_mysql, char *_username)
-{
-    MYSQL_RES *result;
-    MYSQL_ROW row;
-
-    /* è¿›è¡ŒæŸ¥è¯¢ï¼ŒæˆåŠŸè¿”å›0ï¼Œä¸æˆåŠŸé0
-    1ã€æŸ¥è¯¢å­—ç¬¦ä¸²å­˜åœ¨è¯­æ³•é”™è¯¯
-    2ã€æŸ¥è¯¢ä¸å­˜åœ¨çš„æ•°æ®è¡¨ */
-    char sql[200];
-    sprintf(
-        sql,
-        "select firstlog from user where username='%s'",
-        _username);
-
-    if (mysql_query(_mysql, sql))
     {
-        printf("mysql_query_connect failed(%s)", mysql_error(_mysql));
-        return -1;
-    }
-
-    /* å°†æŸ¥è¯¢ç»“æœå­˜å‚¨èµ·æ¥ï¼Œå‡ºç°é”™è¯¯åˆ™è¿”å›NULL
-       æ³¨æ„ï¼šæŸ¥è¯¢ç»“æœä¸ºNULLï¼Œä¸ä¼šè¿”å›NULL */
-    if ((result = mysql_store_result(_mysql)) == NULL)
-    {
-        printf("mysql_store_result failed");
-        return -1;
-    }
-
-    /* å¾ªç¯è¯»å–æ‰€æœ‰æ»¡è¶³æ¡ä»¶çš„è®°å½•
-       1ã€è¿”å›çš„åˆ—é¡ºåºä¸selectæŒ‡å®šçš„åˆ—é¡ºåºç›¸åŒï¼Œä»row[0]å¼€å§‹
-       2ã€ä¸è®ºæ•°æ®åº“ä¸­æ˜¯ä»€ä¹ˆç±»å‹ï¼ŒCä¸­éƒ½å½“ä½œæ˜¯å­—ç¬¦ä¸²æ¥è¿›è¡Œå¤„ç†ï¼Œå¦‚æœæœ‰å¿…è¦ï¼Œéœ€è¦è‡ªå·±è¿›è¡Œè½¬æ¢
-       3ã€æ ¹æ®è‡ªå·±çš„éœ€è¦ç»„ç»‡è¾“å‡ºæ ¼å¼ */
-    int resultnum = 0;
-    while ((row = mysql_fetch_row(result)) != NULL)
-    {
-        resultnum = atoi(row[0]);
-    }
-
-    if (resultnum == 1)
-    {
-        //é¦–æ¬¡ç™»é™† - å°†æ•°æ®åº“å†™
-        char tmpsql[200];
+        /* ÓÃ»§ÃûºÍÃÜÂëÆäÖĞÒ»·½´íÎó - ÅĞ¶ÏÊÇÄÄ¸ö´íÁË*/
         sprintf(
-            tmpsql,
-            "update user set firstlog=false where username='%s';",
+            sql,
+            "select count(username) from user where username='%s'",
             _username);
-        if (mysql_query(_mysql, tmpsql))
+
+        if (mysql_query(_mysql, sql))
         {
             printf("mysql_query_connect failed(%s)", mysql_error(_mysql));
             return -1;
         }
 
-        /* é‡Šæ”¾result */
-        mysql_free_result(result);
+        /* ½«²éÑ¯½á¹û´æ´¢ÆğÀ´£¬³öÏÖ´íÎóÔò·µ»ØNULL
+       ×¢Òâ£º²éÑ¯½á¹ûÎªNULL£¬²»»á·µ»ØNULL */
+        if ((result = mysql_store_result(_mysql)) == NULL)
+        {
+            printf("mysql_store_result failed");
+            return -1;
+        }
 
-        return TRUE;
-    }
-    else
-    {
-        /* é‡Šæ”¾result */
-        mysql_free_result(result);
-        return FALSE;
+        /* ´òÓ¡µ±Ç°²éÑ¯µ½µÄ¼ÇÂ¼µÄÊıÁ¿ */
+        //printf("select return %d records\n",mysql_num_rows(result));
+
+        /* Ñ­»·¶ÁÈ¡ËùÓĞÂú×ãÌõ¼şµÄ¼ÇÂ¼
+       1¡¢·µ»ØµÄÁĞË³ĞòÓëselectÖ¸¶¨µÄÁĞË³ĞòÏàÍ¬£¬´Órow[0]¿ªÊ¼
+       2¡¢²»ÂÛÊı¾İ¿âÖĞÊÇÊ²Ã´ÀàĞÍ£¬CÖĞ¶¼µ±×÷ÊÇ×Ö·û´®À´½øĞĞ´¦Àí£¬Èç¹ûÓĞ±ØÒª£¬ĞèÒª×Ô¼º½øĞĞ×ª»»
+       3¡¢¸ù¾İ×Ô¼ºµÄĞèÒª×éÖ¯Êä³ö¸ñÊ½ */
+        resultnum = 0;
+        while ((row = mysql_fetch_row(result)) != NULL)
+        {
+            resultnum = atoi(row[0]);
+        }
+
+        if (resultnum == 1)
+        {
+            //ÓÃ»§ÃûÊÇ´æÔÚµÄ - ÃÜÂë³ö´íÁË
+            /* ÊÍ·Åresult */
+            mysql_free_result(result);
+            return 2;
+        }
+        else
+        {
+            //ÓÃ»§Ãû²»´æÔÚ
+            mysql_free_result(result);
+            return 3;
+        }
     }
 }
 
-//å½“å‰åœ¨çº¿ç”¨æˆ·å¢åŠ ç”¨æˆ·
+//¸üĞÂÊı¾İ¿âusernameµÄÃÜÂëÎª_keywork
+enum RETURNTYPE UpdateSecret(MYSQL *_mysql, char *_username, char *_keyword)
+{
+    char sql[200];
+    sprintf(
+        sql,
+        "update user set keyword='%s' where username='%s'; ",
+        _keyword,
+        _username);
+
+    if (mysql_query(_mysql, sql))
+    {
+        printf("mysql_query_connect failed(%s)", mysql_error(_mysql));
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+//µ±Ç°ÔÚÏßÓÃ»§Ôö¼ÓÓÃ»§
 enum RETURNTYPE AddOnlineUser(MYSQL *_mysql, char *_username)
 {
-    /* è¿›è¡ŒæŸ¥è¯¢ï¼ŒæˆåŠŸè¿”å›0ï¼Œä¸æˆåŠŸé0
-    1ã€æŸ¥è¯¢å­—ç¬¦ä¸²å­˜åœ¨è¯­æ³•é”™è¯¯
-    2ã€æŸ¥è¯¢ä¸å­˜åœ¨çš„æ•°æ®è¡¨ */
+    /* ½øĞĞ²éÑ¯£¬³É¹¦·µ»Ø0£¬²»³É¹¦·Ç0
+    1¡¢²éÑ¯×Ö·û´®´æÔÚÓï·¨´íÎó
+    2¡¢²éÑ¯²»´æÔÚµÄÊı¾İ±í */
     char sql[200];
     sprintf(
         sql,
@@ -175,12 +257,12 @@ enum RETURNTYPE AddOnlineUser(MYSQL *_mysql, char *_username)
     return TRUE;
 }
 
-//å½“å‰åœ¨çº¿ç”¨æˆ·å‡å°‘ç”¨æˆ·
+//µ±Ç°ÔÚÏßÓÃ»§¼õÉÙÓÃ»§
 enum RETURNTYPE DelOnlineUser(MYSQL *_mysql, char *_username)
 {
-    /* è¿›è¡ŒæŸ¥è¯¢ï¼ŒæˆåŠŸè¿”å›0ï¼Œä¸æˆåŠŸé0
-    1ã€æŸ¥è¯¢å­—ç¬¦ä¸²å­˜åœ¨è¯­æ³•é”™è¯¯
-    2ã€æŸ¥è¯¢ä¸å­˜åœ¨çš„æ•°æ®è¡¨ */
+    /* ½øĞĞ²éÑ¯£¬³É¹¦·µ»Ø0£¬²»³É¹¦·Ç0
+    1¡¢²éÑ¯×Ö·û´®´æÔÚÓï·¨´íÎó
+    2¡¢²éÑ¯²»´æÔÚµÄÊı¾İ±í */
     char sql[200];
     sprintf(
         sql,
@@ -196,15 +278,15 @@ enum RETURNTYPE DelOnlineUser(MYSQL *_mysql, char *_username)
     return TRUE;
 }
 
-//è¿”å›å½“å‰æ‰€æœ‰åœ¨çº¿ç”¨æˆ·
+//·µ»Øµ±Ç°ËùÓĞÔÚÏßÓÃ»§
 char *GetAllUsers(MYSQL *_mysql)
 {
     MYSQL_RES *result;
     MYSQL_ROW row;
 
-    /* è¿›è¡ŒæŸ¥è¯¢ï¼ŒæˆåŠŸè¿”å›0ï¼Œä¸æˆåŠŸé0
-    1ã€æŸ¥è¯¢å­—ç¬¦ä¸²å­˜åœ¨è¯­æ³•é”™è¯¯
-    2ã€æŸ¥è¯¢ä¸å­˜åœ¨çš„æ•°æ®è¡¨ */
+    /* ½øĞĞ²éÑ¯£¬³É¹¦·µ»Ø0£¬²»³É¹¦·Ç0
+    1¡¢²éÑ¯×Ö·û´®´æÔÚÓï·¨´íÎó
+    2¡¢²éÑ¯²»´æÔÚµÄÊı¾İ±í */
     char sql[200];
     sprintf(
         sql,
@@ -216,18 +298,18 @@ char *GetAllUsers(MYSQL *_mysql)
         return NULL;
     }
 
-    /* å°†æŸ¥è¯¢ç»“æœå­˜å‚¨èµ·æ¥ï¼Œå‡ºç°é”™è¯¯åˆ™è¿”å›NULL
-       æ³¨æ„ï¼šæŸ¥è¯¢ç»“æœä¸ºNULLï¼Œä¸ä¼šè¿”å›NULL */
+    /* ½«²éÑ¯½á¹û´æ´¢ÆğÀ´£¬³öÏÖ´íÎóÔò·µ»ØNULL
+       ×¢Òâ£º²éÑ¯½á¹ûÎªNULL£¬²»»á·µ»ØNULL */
     if ((result = mysql_store_result(_mysql)) == NULL)
     {
         printf("mysql_store_result failed");
         return NULL;
     }
 
-    /* å¾ªç¯è¯»å–æ‰€æœ‰æ»¡è¶³æ¡ä»¶çš„è®°å½•
-       1ã€è¿”å›çš„åˆ—é¡ºåºä¸selectæŒ‡å®šçš„åˆ—é¡ºåºç›¸åŒï¼Œä»row[0]å¼€å§‹
-       2ã€ä¸è®ºæ•°æ®åº“ä¸­æ˜¯ä»€ä¹ˆç±»å‹ï¼ŒCä¸­éƒ½å½“ä½œæ˜¯å­—ç¬¦ä¸²æ¥è¿›è¡Œå¤„ç†ï¼Œå¦‚æœæœ‰å¿…è¦ï¼Œéœ€è¦è‡ªå·±è¿›è¡Œè½¬æ¢
-       3ã€æ ¹æ®è‡ªå·±çš„éœ€è¦ç»„ç»‡è¾“å‡ºæ ¼å¼ */
+    /* Ñ­»·¶ÁÈ¡ËùÓĞÂú×ãÌõ¼şµÄ¼ÇÂ¼
+       1¡¢·µ»ØµÄÁĞË³ĞòÓëselectÖ¸¶¨µÄÁĞË³ĞòÏàÍ¬£¬´Órow[0]¿ªÊ¼
+       2¡¢²»ÂÛÊı¾İ¿âÖĞÊÇÊ²Ã´ÀàĞÍ£¬CÖĞ¶¼µ±×÷ÊÇ×Ö·û´®À´½øĞĞ´¦Àí£¬Èç¹ûÓĞ±ØÒª£¬ĞèÒª×Ô¼º½øĞĞ×ª»»
+       3¡¢¸ù¾İ×Ô¼ºµÄĞèÒª×éÖ¯Êä³ö¸ñÊ½ */
     char *buf = NULL;
     int size = 0;
     while ((row = mysql_fetch_row(result)) != NULL)
@@ -249,7 +331,7 @@ char *GetAllUsers(MYSQL *_mysql)
         }
     }
 
-    /* é‡Šæ”¾result */
+    /* ÊÍ·Åresult */
     mysql_free_result(result);
 
     return buf;
@@ -266,38 +348,50 @@ int main(int argc, char *argv[])
     char username3[16] = "MiaoMiaoYag";
     char username4[16] = "MiaoMiaoYng";
     char username5[16] = "MiaoMiaoang";
+    char keyword1[12]="123456";
+    char keyword2[12]="mkamskksa";
 
-    AddOnlineUser(mysql, username1);
-    AddOnlineUser(mysql, username2);
-    AddOnlineUser(mysql, username3);
-    AddOnlineUser(mysql, username4);
-    AddOnlineUser(mysql, username5);
+    printf("Ê×´ÎµÇÂ½-4:%d\n",JudgeUser(mysql,username1,keyword1));
+    printf("ÃÜÂë´íÎó-2:%d\n",JudgeUser(mysql,username1,keyword2));
+    printf("ÓÃ»§ÏûÊ§-3:%d\n",JudgeUser(mysql,username2,keyword1));
+    printf("Õı    È·-1:%d\n",JudgeUser(mysql,username1,keyword1));
+    
 
-    char *buf = GetAllUsers(mysql);
-    if (buf != NULL)
-    {
-        printf("%s\n", buf);
-        free(buf);
-    }
-    else
-    {
-        printf("empty\n");
-    }
+//    UpdateSecret(mysql,username1,keyword2);
 
-    DelOnlineUser(mysql, username1);
-    DelOnlineUser(mysql, username2);
-    DelOnlineUser(mysql, username3);
-    DelOnlineUser(mysql, username4);
-    DelOnlineUser(mysql, username5);
+    // AddOnlineUser(mysql, username1);
+    // AddOnlineUser(mysql, username2);
+    // AddOnlineUser(mysql, username3);
+    // AddOnlineUser(mysql, username4);
+    // AddOnlineUser(mysql, username5);
 
-    buf = GetAllUsers(mysql);
-    if (buf != NULL)
-    {
-        printf("%s\n", buf);
-        free(buf);
-    }
+    // char *buf = GetAllUsers(mysql);
+    // if (buf != NULL)
+    // {
+    //     printf("%s\n", buf);
+    //     free(buf);
+    // }
+    // else
+    // {
+    //     printf("empty\n");
+    // }
 
-    /* å…³é—­æ•´ä¸ªè¿æ¥ */
+    // DelOnlineUser(mysql, username1);
+    // DelOnlineUser(mysql, username2);
+    // DelOnlineUser(mysql, username3);
+    // DelOnlineUser(mysql, username4);
+    // DelOnlineUser(mysql, username5);
+
+    // buf = GetAllUsers(mysql);
+    // if (buf != NULL)
+    // {
+    //     printf("%s\n", buf);
+    //     free(buf);
+    // }
+
+
+
+    /* ¹Ø±ÕÕû¸öÁ¬½Ó */
     mysql_close(mysql);
 
     return 0;
