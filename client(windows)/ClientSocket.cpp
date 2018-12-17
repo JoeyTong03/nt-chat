@@ -188,7 +188,8 @@ void ClientSocket::SendOffLineFrame()const
 功    能：解析帧头
 输入参数：来自server的帧
 返 回 值：
-说    明：
+说    明：@杨小宇要修改的部分，在所有case后面有注释的地方加入每种情况client需要作出的处理，
+		帧解析后的有效内容在每个case内部，具体内容看注释
 ***************************************************************************/
 void ClientSocket::AnlsFrame(char*buf)
 {
@@ -198,16 +199,16 @@ void ClientSocket::AnlsFrame(char*buf)
 		switch ((int)buf[1])
 		{
 		case 0://登陆成功
-			cout << "登陆成功" << endl;
+			//
 			break;
 		case 1://密码错误
-			cout << "密码错误" << endl;
+			//
 			break;
 		case 2://用户名不存在
-			cout << "用户名不存在" << endl;
+			//
 			break;
 		case 3://是否需要改密
-			cout << "是否需要改密" << endl;
+			//
 			break;
 		default:
 			break;
@@ -217,12 +218,16 @@ void ClientSocket::AnlsFrame(char*buf)
 		switch ((int)buf[1])
 		{
 		case 0x00://转发成功
+			//
 			break;
 		case 0xFF://信息语法有误
+			//
 			break;
 		case 0xFE://好友名称不存在
+			//
 			break;
 		case 0xFD://好友未上线
+			//
 			break;
 		default:
 			break;
@@ -231,7 +236,7 @@ void ClientSocket::AnlsFrame(char*buf)
 	case 0x77://文本信息帧（从server端转发而来的）
 	{
 		QString FromName;//信息来源
-		QString Text = AcceptText(buf, FromName);
+		QString Text = AcceptText(buf, FromName);//文本信息
 		//处理文本信息
 		break;
 	}
@@ -254,6 +259,8 @@ void ClientSocket::AnlsFrame(char*buf)
 	case 0x76://好友初始化
 	{
 		QVector<QString>namelist = AcceptInitFri(buf);
+		//namelist为好友列表(vector)
+		//
 		break;
 	}
 	default:
