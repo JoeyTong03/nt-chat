@@ -1,26 +1,10 @@
 #pragma once
-
 #include <QTcpSocket>
+#include <QtEndian>
+#include <QVector>
 
 class ClientSocket
 {
-public:
-	ClientSocket();
-	~ClientSocket();
-
-	//Socket连接函数
-	bool connectServer();
-
-	//Socket断开连接
-	void closeConnect();
-
-	//发送帧函数
-	char* SendRegisterFrame(const QString _username,const QString _secret)const;
-	void SendTextFrame(const QString _str)const;
-	void SendChangeSecretFrame(const QString _secret)const;
-	void SendOffLineFrame()const;
-
-
 private:
 
 	//发送帧类型
@@ -44,6 +28,7 @@ private:
 	enum ReceiveFrameHeadType
 	{
 		RfhRegister = 0,	//报到帧
+		RfhTextReply,		//文本应答帧
 		RfhText,			//文本信息帧
 		RfhBeKicked,		//下线退位帧
 		RfhOnOffLine,		//上/下线帧
@@ -51,9 +36,10 @@ private:
 	};
 
 	//接受帧头
-	const char ReceiveFrameHead[5] = {
+	const char ReceiveFrameHead[6] = {
 		0x71,	//报到帧
-		0x72,	//文本信息帧
+		0x72,	//文本应答帧
+		0x77,   //文本信息帧
 		0x73,	//下线退位帧
 		0x75,	//上/下线帧
 		0x76	//好友初始化帧
@@ -70,5 +56,28 @@ private:
 	//QTcpSocket
 	QTcpSocket* socket;
 
+public:
+	ClientSocket();
+	~ClientSocket();
+
+	//Socket连接函数
+	bool connectServer();
+
+	//Socket断开连接
+	void closeConnect();
+
+	//发送帧函数
+	void SendRegisterFrame(const QString _username, const QString _secret)const;
+	void SendTextFrame(const QString _str, const QString _username)const;
+	void SendChangeSecretFrame(const QString _secret)const;
+	void SendOffLineFrame()const;
+
+	//解析帧头函数
+	void AnlsFrame(char*buf);
+
+	//文本帧解析
+	QString AcceptText(char* TextFrame, QString&FromName);
+	QString AcceptOnOffLineName(char* OnOffLineFrame);
+	QVector<QString> AcceptInitFri(char* InitFriFrame);
 };
 
