@@ -1,15 +1,8 @@
 //mysql_demo.cpp
 
-#include <mysql.h> // mysql特有
-#include <stdio.h>
-#include <malloc.h>
-#include <string.h>
 
-enum RETURNTYPE
-{
-    FALSE,
-    TRUE
-};
+#include "db.h"
+
 
 //初始化数据库
 enum RETURNTYPE InitDatabase(MYSQL **_mysql)
@@ -429,19 +422,19 @@ char *GetAllUsers(MYSQL *_mysql)
     return buf;
 }
 
-int main(int argc, char *argv[])
-{
-    MYSQL *mysql;
+// int main(int argc, char *argv[])
+// {
+    // MYSQL *mysql;
 
-    InitDatabase(&mysql);
+    // InitDatabase(&mysql);
 
-    char username1[16] = "MiaoMiaoYang";
-    char username2[16] = "MiaoMiaoYan";
-    char username3[16] = "MiaoMiaoYag";
-    char username4[16] = "MiaoMiaoYng";
-    char username5[16] = "MiaoMiaoang";
-    char keyword1[12] = "123456";
-    char keyword2[12] = "mkamskksa";
+    // char username1[16] = "MiaoMiaoYang";
+    // char username2[16] = "MiaoMiaoYan";
+    // char username3[16] = "MiaoMiaoYag";
+    // char username4[16] = "MiaoMiaoYng";
+    // char username5[16] = "MiaoMiaoang";
+    // char keyword1[12] = "123456";
+    // char keyword2[12] = "mkamskksa";
 
     // printf("首次登陆-4:%d\n", JudgeUser(mysql, username1, keyword1));
     // printf("密码错误-2:%d\n", JudgeUser(mysql, username1, keyword2));
@@ -450,14 +443,14 @@ int main(int argc, char *argv[])
 
     //    UpdateSecret(mysql,username1,keyword2);
 
-    AddOnlineUser(mysql, username1,1);
-    AddOnlineUser(mysql, username2,2);
-    AddOnlineUser(mysql, username3,3);
-    AddOnlineUser(mysql, username4,4);
-    AddOnlineUser(mysql, username5,5);
+    // AddOnlineUser(mysql, username1,1);
+    // AddOnlineUser(mysql, username2,2);
+    // AddOnlineUser(mysql, username3,3);
+    // AddOnlineUser(mysql, username4,4);
+    // AddOnlineUser(mysql, username5,5);
 
-    printf("%d\n",GetOnlineId(mysql,username1));
-    printf("%s\n",GetOnlineUsername(mysql,2));
+    // printf("%d\n",GetOnlineId(mysql,username1));
+    // printf("%s\n",GetOnlineUsername(mysql,2));
 
     // char *buf = GetAllUsers(mysql);
     // if (buf != NULL)
@@ -484,7 +477,7 @@ int main(int argc, char *argv[])
     // }
 
     /* 关闭整个连接 */
-    mysql_close(mysql);
+    // mysql_close(mysql);
 
-    return 0;
-}
+    // return 0;
+// }
