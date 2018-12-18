@@ -1,4 +1,5 @@
 #pragma once
+
 #include <QTcpSocket>
 #include <QtEndian>
 #include <QVector>
@@ -79,5 +80,7 @@ public:
 	QString AcceptText(char* TextFrame, QString&FromName);
 	QString AcceptOnOffLineName(char* OnOffLineFrame);
 	QVector<QString> AcceptInitFri(char* InitFriFrame);
+
+	friend class MainWidget;
 };
 

@@ -2,6 +2,7 @@
 #include<iomanip>
 #include<iostream>
 using namespace std;
+
 ClientSocket::ClientSocket()
 {
 
@@ -71,6 +72,7 @@ void Str2int(char*buf, int length)
 	}
 	printf("%c", '\n');
 }
+
 /*************************************
  * 函数名称：SendRegisterFrame
  * 功    能：发送报道帧
@@ -108,6 +110,7 @@ void ClientSocket::SendRegisterFrame(const QString _username, const QString _sec
 	//Str2int(buf, 32);
 
 }
+
 /***************************************************************************
 函数名称：SendTextFrame
 功    能：发送文本信息帧
@@ -141,6 +144,7 @@ void ClientSocket::SendTextFrame(const QString _str,QString DestUsername)const
 	socket->write(buf, FrameLength);
 
 }
+
 /***************************************************************************
 函数名称：SendChangeSecretFrame
 功    能：发送改密帧
@@ -163,6 +167,7 @@ void ClientSocket::SendChangeSecretFrame(const QString _secret)const
 	socket->write(buf, FrameLength);
 
 }
+
 /***************************************************************************
 函数名称：SendOffLineFrame
 功    能：client端向server端发送下线帧
@@ -183,6 +188,7 @@ void ClientSocket::SendOffLineFrame()const
 	socket->write(buf, FrameLength);
 
 }
+
 /***************************************************************************
 函数名称：AnlsFrame
 功    能：解析帧头
@@ -267,6 +273,7 @@ void ClientSocket::AnlsFrame(char*buf)
 		break;
 	}
 }
+
 /***************************************************************************
 函数名称：AcceptText
 功    能：解析文本信息帧
@@ -285,6 +292,7 @@ QString ClientSocket::AcceptText(char* TextFrame,QString&FromName)
 	Text = QString(QLatin1String(TextFrame + 6 + FromName.size()));
 	return Text;
 }
+
 /***************************************************************************
 函数名称：AcceptOnOffLineName
 功    能：解析上/下线帧
@@ -298,6 +306,7 @@ QString ClientSocket::AcceptOnOffLineName(char* OnOffLineFrame)
 	//OnOffLine = (int)OnOffLineFrame[1];
 	return name;
 }
+
 /***************************************************************************
 函数名称：AcceptInitFri
 功    能：解析好友初始化帧
@@ -319,5 +328,7 @@ QVector<QString> ClientSocket::AcceptInitFri(char* InitFriFrame)
 	}
 	return NameList;
 }
+
+
 //目前问题
 //ntohs

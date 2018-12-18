@@ -101,7 +101,7 @@ GroupChat_MessageWidget::GroupChat_MessageWidget(
 		else
 		{
 			UsernameLabel->setAlignment(Qt::AlignTop | Qt::AlignRight);
-			TextEdit->setAlignment(Qt::AlignTop | Qt::AlignRight);
+			TextEdit->setAlignment(Qt::AlignTop | Qt::AlignLeft);
 
 			TextLayout->setAlignment(Qt::AlignTop | Qt::AlignRight);
 			Layout->addLayout(TextLayout);
