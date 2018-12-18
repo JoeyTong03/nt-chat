@@ -43,8 +43,10 @@ insert into user (username,keyword) values
 -- ----------------------------
 drop Table if exists onlineuser;
 create Table onlineuser(
-    username varchar(16) not null,       /* 用户名，最大16字节 */
-    PRIMARY KEY (username)
+    username varchar(16) not null,  /* 用户名，最大16字节 */
+    id int not null,                /* 用户ID */
+    PRIMARY KEY (username),
+    UNIQUE (id)
 )character set=gbk;
 
 

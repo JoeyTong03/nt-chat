@@ -82,8 +82,7 @@ enum RETURNTYPE JudgeFirstLog(MYSQL *_mysql, char *_username)
         sprintf(
             tmpsql,
             "update user set firstlog=false where username='%s';",
-            _username
-        );
+            _username);
 
         if (mysql_query(_mysql, tmpsql))
         {
@@ -237,7 +236,7 @@ enum RETURNTYPE UpdateSecret(MYSQL *_mysql, char *_username, char *_keyword)
 }
 
 //当前在线用户增加用户
-enum RETURNTYPE AddOnlineUser(MYSQL *_mysql, char *_username)
+enum RETURNTYPE AddOnlineUser(MYSQL *_mysql, char *_username,int id)
 {
     /* 进行查询，成功返回0，不成功非0
     1、查询字符串存在语法错误
@@ -245,8 +244,10 @@ enum RETURNTYPE AddOnlineUser(MYSQL *_mysql, char *_username)
     char sql[200];
     sprintf(
         sql,
-        "insert into onlineuser(username) values ('%s'); ",
-        _username);
+        "insert into onlineuser(username,id) values ('%s',%d); ",
+        _username,
+        id    
+    );
 
     if (mysql_query(_mysql, sql))
     {
@@ -276,6 +277,97 @@ enum RETURNTYPE DelOnlineUser(MYSQL *_mysql, char *_username)
     }
 
     return TRUE;
+}
+
+//返回当前在线用户的文件名
+char *GetOnlineUsername(MYSQL *_mysql, int _id)
+{
+    MYSQL_RES *result;
+    MYSQL_ROW row;
+
+    /* 进行查询，成功返回0，不成功非0
+    1、查询字符串存在语法错误
+    2、查询不存在的数据表 */
+    char sql[200];
+    sprintf(
+        sql,
+        "select username from onlineuser where id=%d;",
+        _id);
+
+    if (mysql_query(_mysql, sql))
+    {
+        printf("mysql_query_connect failed(%s)", mysql_error(_mysql));
+        return NULL;
+    }
+
+    /* 将查询结果存储起来，出现错误则返回NULL
+       注意：查询结果为NULL，不会返回NULL */
+    if ((result = mysql_store_result(_mysql)) == NULL)
+    {
+        printf("mysql_store_result failed");
+        return NULL;
+    }
+
+    /* 循环读取所有满足条件的记录
+       1、返回的列顺序与select指定的列顺序相同，从row[0]开始
+       2、不论数据库中是什么类型，C中都当作是字符串来进行处理，如果有必要，需要自己进行转换
+       3、根据自己的需要组织输出格式 */
+    char *buf = (char *)malloc(16 * sizeof(char));
+    while ((row = mysql_fetch_row(result)) != NULL)
+    {
+        sprintf(buf, "%s", row[0]);
+    }
+
+    /* 释放result */
+    mysql_free_result(result);
+
+    return buf;
+}
+
+//返回当前在线用户的ID号
+int GetOnlineId(MYSQL *_mysql, char *_username)
+{
+    MYSQL_RES *result;
+    MYSQL_ROW row;
+
+    /* 进行查询，成功返回0，不成功非0
+    1、查询字符串存在语法错误
+    2、查询不存在的数据表 */
+    char sql[200];
+    sprintf(
+        sql,
+        "select id from onlineuser where username='%s';",
+        _username
+    );
+
+    if (mysql_query(_mysql, sql))
+    {
+        printf("mysql_query_connect failed(%s)", mysql_error(_mysql));
+        return -1;
+    }
+
+    /* 将查询结果存储起来，出现错误则返回NULL
+       注意：查询结果为NULL，不会返回NULL */
+    if ((result = mysql_store_result(_mysql)) == NULL)
+    {
+        printf("mysql_store_result failed");
+        return -1;
+    }
+
+    /* 循环读取所有满足条件的记录
+       1、返回的列顺序与select指定的列顺序相同，从row[0]开始
+       2、不论数据库中是什么类型，C中都当作是字符串来进行处理，如果有必要，需要自己进行转换
+       3、根据自己的需要组织输出格式 */
+    int buf;
+    while ((row = mysql_fetch_row(result)) != NULL)
+    {
+        buf=atoi(row[0]);
+    }
+
+    /* 释放result */
+    mysql_free_result(result);
+
+    return buf;
 }
 
 //返回当前所有在线用户
@@ -348,22 +440,24 @@ int main(int argc, char *argv[])
     char username3[16] = "MiaoMiaoYag";
     char username4[16] = "MiaoMiaoYng";
     char username5[16] = "MiaoMiaoang";
-    char keyword1[12]="123456";
-    char keyword2[12]="mkamskksa";
+    char keyword1[12] = "123456";
+    char keyword2[12] = "mkamskksa";
 
-    printf("首次登陆-4:%d\n",JudgeUser(mysql,username1,keyword1));
-    printf("密码错误-2:%d\n",JudgeUser(mysql,username1,keyword2));
-    printf("用户消失-3:%d\n",JudgeUser(mysql,username2,keyword1));
-    printf("正    确-1:%d\n",JudgeUser(mysql,username1,keyword1));
-    
+    // printf("首次登陆-4:%d\n", JudgeUser(mysql, username1, keyword1));
+    // printf("密码错误-2:%d\n", JudgeUser(mysql, username1, keyword2));
+    // printf("用户消失-3:%d\n", JudgeUser(mysql, username2, keyword1));
+    // printf("正    确-1:%d\n", JudgeUser(mysql, username1, keyword1));
 
-//    UpdateSecret(mysql,username1,keyword2);
+    //    UpdateSecret(mysql,username1,keyword2);
 
-    // AddOnlineUser(mysql, username1);
-    // AddOnlineUser(mysql, username2);
-    // AddOnlineUser(mysql, username3);
-    // AddOnlineUser(mysql, username4);
-    // AddOnlineUser(mysql, username5);
+    AddOnlineUser(mysql, username1,1);
+    AddOnlineUser(mysql, username2,2);
+    AddOnlineUser(mysql, username3,3);
+    AddOnlineUser(mysql, username4,4);
+    AddOnlineUser(mysql, username5,5);
+
+    printf("%d\n",GetOnlineId(mysql,username1));
+    printf("%s\n",GetOnlineUsername(mysql,2));
 
     // char *buf = GetAllUsers(mysql);
     // if (buf != NULL)
@@ -388,8 +482,6 @@ int main(int argc, char *argv[])
     //     printf("%s\n", buf);
     //     free(buf);
     // }
-
-
 
     /* 关闭整个连接 */
     mysql_close(mysql);
