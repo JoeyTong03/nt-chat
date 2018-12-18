@@ -74,10 +74,10 @@ int initReplyFrame(int ReplyType, char**ReplyFrame)
 {
 	*ReplyFrame = (char*)malloc(4 * sizeof(char));
 	memset(*ReplyFrame, 0, 4);
-	*ReplyFrame[0] = (char)0x71;
-	*ReplyFrame[1] = (char)ReplyType;
+	(*ReplyFrame)[0] = (char)0x71;
+	(*ReplyFrame)[1] = (char)ReplyType;
 	uint16_t length = 4;
-	memcpy(*ReplyFrame + 2, &length, 2);
+	memcpy((*ReplyFrame) + 2, &length, 2);
 	return 1;
 }
 /***************************************************************************
@@ -91,10 +91,10 @@ int CrtTextReplyFrame(int ReplyType, char**TextReplyFrame)
 {
 	*TextReplyFrame = (char*)malloc(4 * sizeof(char));
 	memset(*TextReplyFrame, 0, 4);
-	*TextReplyFrame[0] = (char)0x72;
-	*TextReplyFrame[1] = (char)ReplyType;
+	(*TextReplyFrame)[0] = (char)0x72;
+	(*TextReplyFrame)[1] = (char)ReplyType;
 	uint16_t length = 4;
-	memcpy(*TextReplyFrame + 2, &length, 2);
+	memcpy((*TextReplyFrame) + 2, &length, 2);
 	return 1;
 }
 /***************************************************************************
