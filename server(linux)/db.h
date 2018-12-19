@@ -1,3 +1,4 @@
+
 /* db.h */
 #include <mysql.h> // mysql特有
 #include <stdio.h>

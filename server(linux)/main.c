@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 		maxfd = socket_fd;
 		FD_ZERO(&rfd);
 		FD_SET(socket_fd,&rfd);
-		selectRet = select(maxfd + 1,&rfd,NULL,NULL,timeout);
+		selectRet = select(maxfd + 1,&rfd,NULL,NULL,&timeout);
 		if(selectRet==0)//超时
 			continue;
 		if(selectRet>0 && FD_ISSET(socket_fd,&rfd))//说明有新的连接

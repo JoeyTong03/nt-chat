@@ -3,11 +3,11 @@
 compiler=gcc
 
 SRCS :=$(wildcard *.c)
-TARGET :=$(patsubst %.c,%,$(SRCS))
+TARGET := server
 OBJDIR = .
 
 .c:
-	gcc db.c -o $(TARGET) -I/usr/include/mysql -L/usr/lib64/mysql -lmysqlclient
+	gcc $(SRCS) -o $(TARGET) -I/usr/include/mysql -L/usr/lib64/mysql -lmysqlclient
 #	$(compiler) -o $@ $<
 
 all:$(TARGET) cleano

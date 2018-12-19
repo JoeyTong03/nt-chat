@@ -4,13 +4,13 @@
 #include<stdint.h>
 #include<string.h>
 //报道应答帧的应答类型
-enum IdentifyResultType
-{
-	Right = 0,			//正确
-	SecretErr,			//密码错误
-	NameNoExist,		//用户不存在
-	NeedUpdateSecret	//是否需要改密
-};
+// enum IdentifyResultType
+// {
+// 	Right = 0,			//正确
+// 	SecretErr,			//密码错误
+// 	NameNoExist,		//用户不存在
+// 	NeedUpdateSecret	//是否需要改密
+// };
 //文本应答帧的应答类型
 enum IdentifyTextType
 {
@@ -25,18 +25,19 @@ enum SendFrameHeadType
 	SfhRegister = 0x11,		//报到帧
 	SfhText = 0x12,			//文本信息帧
 	SfhChangeSecret = 0x15,	//改密帧
-	SfhOffLine = 0x16		//下线帧
+	SfhOffLine = 0x16,		//下线帧
+	SfhOnLine=0x18			//上线帧
 };
 //S->C帧类型
 enum ReceiveFrameHeadType
 {
-	RfhRegister = 0x71,		//报到帧
+	RfhRegister = 0x71,		//报到应答帧
 	RfhTextReply = 0x72,	//文本应答帧
 	RfhText = 0x77,			//文本信息帧
 	RfhBeKicked = 0x73,		//下线退位帧
 	RfhOnOffLine = 0x75,	//上/下线帧
-	RfhInit = 0x76,			//好友初始化帧
-	OnOffLine = 0x77		//上线帧（我也不知道放在这里对不对）
+	RfhInit = 0x76			//好友初始化帧
+	// OnOffLine = 0x78		//上线帧（我也不知道放在这里对不对）
 };
 /********************C->S的帧解析部分*******************/
 //根据收到的帧，返回属于哪个帧类型：

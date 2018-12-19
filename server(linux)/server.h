@@ -1,3 +1,7 @@
+
+#define SERVER
+#ifdef SERVER
+
 #include <time.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -14,10 +18,14 @@
 #include <errno.h>
 #include <signal.h>
 #include <sys/prctl.h>//修改进程名
+#include <sys/msg.h> //消息队列
+
 
 #define BUFSIZE 1024
 #define LEN32	32	//32字节的帧
 #define LEN16	16	//16字节的帧
+
+#define MAXNUM_CLIENT 10 //最多的客户端数量
 
 #include "ServerFrame.h"
 #include "db.h"
@@ -29,13 +37,14 @@ enum IdentifyResultType
 	SecretErr,
 	NameNoExist,
 	NeedUpdateSecret
-}
+};
 
-struct Msg
+typedef struct Msg
 {
 	long mtype;
 	char mtext[BUFSIZE];
-};
+}Msg;
+
 
 /* 等待子进程结束，避免出现僵尸进程 */
 void wait4children(int sig);
@@ -44,7 +53,7 @@ void wait4children(int sig);
 int initSocketFd(int *socket_fd,int port);
 
 /* 初始化连接socket描述符 */
-int initConnection(int *connect_fd,socket_fd);
+int initConnection(int* connect_fd,int socket_fd );
 
 /* 登录时初始化，负责用户登录时的认证、改密 */
 int initLogin(int *connect_fd,MYSQL *mysql,char username[],int client_num);
@@ -71,7 +80,9 @@ int subFromMain(char subRecvBuf[],int msg_id0);
 int transferMsg(MYSQL *mysql,int client_num);
 
 /* 将数据群发给所有用户 */
-int toAllUser(Msg *msg,int client_num);
+int toAllUser(struct Msg* msg,int client_num);
 
 /* 将数据发送给目标用户targetUser */
 int toSomeone(MYSQL *mysql,Msg *msg,char targetUser[]);
+
+#endif

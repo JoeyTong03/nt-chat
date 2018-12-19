@@ -61,7 +61,7 @@ int initSocketFd(int *socket_fd,int port)
 }
 
 /* 初始化连接socket描述符 */
-int initConnection(int *connect_fd,socket_fd)
+int initConnection(int *connect_fd,int socket_fd)
 {
 	fd_set rfd;
 	FD_ZERO(&rfd);
@@ -75,6 +75,7 @@ int initConnection(int *connect_fd,socket_fd)
 			return -1;
 		}
 		//设置非阻塞模式
+		int flags=0;
 		if((flags = fcntl(*connect_fd,F_GETFL,0)) == -1){
 			printf("%s(errno:%d)\n",strerror(errno),errno);
 			return -2;
@@ -152,7 +153,7 @@ int initLogin(int *connect_fd,MYSQL *mysql,char username[],int client_num)
 			
 	/* 如果需要修改密码，等待客户端发送SfhChangeSecret帧，并获取其中的密码，更新数据库 */
 	if(replyType==NeedUpdateSecret)
-		if(changeSecret(*connect_fd,mysql,username)<0)
+		if(changeSecret(connect_fd,mysql,username)<0)
 			return -4;
 	
 	
@@ -203,7 +204,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql,char username[],int client_num)
 		memset(recvBuf,0,BUFSIZE);
 		memset(sendBuf,0,BUFSIZE);
 		maxfd=*connect_fd;
-		ret=select(maxfd+1,&rfd,&wfd,NULL);
+		ret=select(maxfd+1,&rfd,&wfd,NULL,NULL);
 		if(ret>0 && FD_ISSET(*connect_fd,&rfd))//有可读的数据
 		{
 			if(recv(*connect_fd,recvBuf,BUFSIZE,0)<0)
@@ -426,7 +427,7 @@ int transferMsg(MYSQL *mysql,int client_num)
 			frType=getType(recvMsg.mtext);
 			switch(frType)
 			{
-				case SfhOnLine：//如果是上/下线帧，解析出username后封装s->c的帧，转发给所有用户
+				case SfhOnLine://如果是上/下线帧，解析出username后封装s->c的帧，转发给所有用户
 				case SfhOffLine:
 					analysisSfhOnOffLine(recvMsg.mtext,username);
 					CrtOnOffFrame(username,0,&frame);
@@ -442,7 +443,7 @@ int transferMsg(MYSQL *mysql,int client_num)
 					if(strcmp(targetUser,"all")==0)
 						toAllUser(&sendMsg,client_num);
 					else
-						toSomeone(&sendMsg,targetUser);
+						toSomeone(mysql,&sendMsg,targetUser);
 			}
 		}
 		else if(errno==ENOMSG)//超时，没数据可读
@@ -465,7 +466,7 @@ int toAllUser(Msg *msg,int client_num)
 	{
 		/* 获得msg_id0,msg_id1（已存在直接返回对应的文件描述符） */
 		createMsgQue(client_num,&msg_id0,&msg_id1);
-		msgsnd(msg_id0,msg,strlen(msg.mtext)+1,0);
+		msgsnd(msg_id0,msg,strlen(msg->mtext)+1,0);
 	}
 	return 0;
 }
@@ -476,7 +477,7 @@ int toSomeone(MYSQL *mysql,Msg *msg,char targetUser[])
 	int x = GetOnlineId(mysql,targetUser);
 	int msg_id0,msg_id1;
 	createMsgQue(x,&msg_id0,&msg_id1);
-	if(msgsnd(msg_id0,msg,strlen(msg.mtext)+1,0)==-1)
+	if(msgsnd(msg_id0,msg,strlen(msg->mtext)+1,0)==-1)
 	{
 		printf("Client send to %d fail!\n",msg_id0);
 		return -2;
