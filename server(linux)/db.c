@@ -422,19 +422,23 @@ char *GetAllUsers(MYSQL *_mysql)
     return buf;
 }
 
-// int main(int argc, char *argv[])
-// {
-    // MYSQL *mysql;
+#ifdef TESTDB
 
-    // InitDatabase(&mysql);
+int main(int argc, char *argv[])
+{
+    MYSQL *mysql;
 
-    // char username1[16] = "MiaoMiaoYang";
-    // char username2[16] = "MiaoMiaoYan";
-    // char username3[16] = "MiaoMiaoYag";
-    // char username4[16] = "MiaoMiaoYng";
-    // char username5[16] = "MiaoMiaoang";
-    // char keyword1[12] = "123456";
-    // char keyword2[12] = "mkamskksa";
+    InitDatabase(&mysql);
+
+    char username1[16] = "MiaoMiaoYang";
+    char username2[16] = "MiaoMiaoYan";
+    char username3[16] = "MiaoMiaoYag";
+    char username4[16] = "MiaoMiaoYng";
+    char username5[16] = "MiaoMiaoang";
+    char keyword1[12] = "123456";
+    char keyword2[12] = "mkamskksa";
+
+    UpdateSecret(mysql,username1,keyword2);
 
     // printf("首次登陆-4:%d\n", JudgeUser(mysql, username1, keyword1));
     // printf("密码错误-2:%d\n", JudgeUser(mysql, username1, keyword2));
@@ -477,7 +481,9 @@ char *GetAllUsers(MYSQL *_mysql)
     // }
 
     /* 关闭整个连接 */
-    // mysql_close(mysql);
+    mysql_close(mysql);
 
-    // return 0;
-// }
+    return 0;
+}
+
+#endif

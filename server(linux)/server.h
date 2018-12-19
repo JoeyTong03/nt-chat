@@ -71,7 +71,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql,char username[],int client_num)
 int createMsgQue(int _client_num,int *msg_id0,int *msg_id1);
 
 /* 子进程向父进程发送帧 */
-int sub2main(char *sendBuf,int msg_id1);
+int sub2main(char *sendBuf,int msg_id1,int sendBuf_length);
 
 /* 子进程从父进程获取帧 */
 int subFromMain(char subRecvBuf[],int msg_id0);
@@ -80,9 +80,9 @@ int subFromMain(char subRecvBuf[],int msg_id0);
 int transferMsg(MYSQL *mysql,int client_num);
 
 /* 将数据群发给所有用户 */
-int toAllUser(struct Msg* msg,int client_num);
+int toAllUser(struct Msg* msg,int client_num,int mtext_length);
 
 /* 将数据发送给目标用户targetUser */
-int toSomeone(MYSQL *mysql,Msg *msg,char targetUser[]);
+int toSomeone(MYSQL *mysql,Msg *msg,char targetUser[],int mtext_length);
 
 #endif

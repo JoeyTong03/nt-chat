@@ -66,42 +66,25 @@ int initSocketFd(int *socket_fd, int port)
 /* 初始化连接socket描述符 */
 int initConnection(int *connect_fd, int socket_fd)
 {
-	// fd_set rfd;
-	// FD_ZERO(&rfd);
-	// int maxfd = *connect_fd;
-	// FD_SET(*connect_fd, &rfd);
+	if ((*connect_fd = accept(socket_fd, (struct sockaddr *)NULL, NULL)) == -1)
+	{
+		printf("Socket connect error:%s(errno:%d)\n", strerror(errno), errno);
+		return -1;
+	}
 
-	printf("3.1\n");
+	//设置非阻塞模式
+	int flags = 0;
+	if ((flags = fcntl(*connect_fd, F_GETFL, 0)) == -1)
+	{
+		printf("%s(errno:%d)\n", strerror(errno), errno);
+		return -2;
+	}
 
-	// if (select(maxfd + 1, &rfd, NULL, NULL, NULL) > 0) //有可读的数据
-	// {
-
-		printf("3.2\n");
-
-		if ((*connect_fd = accept(socket_fd, (struct sockaddr *)NULL, NULL)) == -1)
-		{
-			printf("Socket connect error:%s(errno:%d)\n", strerror(errno), errno);
-			return -1;
-		}
-
-		printf("3.3\n");
-
-		//设置非阻塞模式
-		int flags = 0;
-		if ((flags = fcntl(*connect_fd, F_GETFL, 0)) == -1)
-		{
-			printf("%s(errno:%d)\n", strerror(errno), errno);
-			return -2;
-		}
-
-		printf("3.4\n");
-
-		if (fcntl(*connect_fd, F_SETFL, flags | O_NONBLOCK) == -1)
-		{
-			printf("%s(errno:%d)\n", strerror(errno), errno);
-			return -3;
-		}
-	// }
+	if (fcntl(*connect_fd, F_SETFL, flags | O_NONBLOCK) == -1)
+	{
+		printf("%s(errno:%d)\n", strerror(errno), errno);
+		return -3;
+	}
 
 	return 0;
 }
@@ -173,13 +156,14 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 	/* 发送好友初始化帧 */
 	char *nameList = GetAllUsers(mysql);
 	char *friInitFrame;
-	CrtFriInit(nameList, &friInitFrame);
+	int friInitFrame_length;
+	friInitFrame_length = CrtFriInit(nameList, &friInitFrame);
 	FD_ZERO(&wfd);
 	FD_SET(*connect_fd, &wfd);
 
 	if (select(maxfd + 1, NULL, &wfd, NULL, NULL) > 0) //有可写的数据
 	{
-		if (send(*connect_fd, friInitFrame, strlen(friInitFrame) + 1, 0) < 0)
+		if (send(*connect_fd, friInitFrame, friInitFrame_length, 0) < 0)
 		{
 			printf("Send friInitFrame error!\n");
 			close(*connect_fd);
@@ -194,14 +178,15 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 {
 	/* 生成一个上线帧 */
 	char *onlineFrame;
-	CrtOnLineFrame(username, &onlineFrame); //函数内部申请空间
+	int onlineFrame_length;
+	onlineFrame_length = CrtOnLineFrame(username, &onlineFrame); //函数内部申请空间
 
 	/* 创建消息队列 */
 	int msg_id0, msg_id1;
 	createMsgQue(client_num, &msg_id0, &msg_id1);
 
 	/* 传递给父进程 */
-	sub2main(onlineFrame, msg_id1);
+	sub2main(onlineFrame, msg_id1, onlineFrame_length);
 
 	/* 进入聊天状态，收发client端的帧，直接扔给父进程 */
 	fd_set rfd, wfd;
@@ -230,7 +215,9 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 			else
 			{
 				/* 传递给父进程 */
-				sub2main(recvBuf, msg_id1);
+				uint16_t recvBuf_length;
+				memcpy(&recvBuf_length, recvBuf + 2, 2);
+				sub2main(recvBuf, msg_id1, (int)recvBuf_length);
 
 				/* 判断是否是下线帧 */
 				if (getType(recvBuf) == SfhOffLine) //如果是下线帧
@@ -330,8 +317,13 @@ int changeSecret(int *connect_fd, MYSQL *mysql, char username[])
 		close(*connect_fd);
 		return -3;
 	}
+
+	//	Str2int2(buf,16);
+
 	/* 解析改密帧，获取新密码 */
 	analysisSfhChangeSecret(buf, newSecret);
+
+	printf("newsecret %s\n", newSecret);
 
 	/* 更新数据库该用户的密码 */
 	UpdateSecret(mysql, username, newSecret);
@@ -364,14 +356,14 @@ int createMsgQue(int _client_num, int *msg_id0, int *msg_id1)
 功能：子进程向父进程发送数据 
 参数：sendBuf--要发送的数据  index--是第几个子进程
 */
-int sub2main(char *sendBuf, int msg_id1)
+int sub2main(char *sendBuf, int msg_id1, int sendBuf_length)
 {
 	struct Msg msg;
 	msg.mtype = 1;
-	memcpy(msg.mtext, sendBuf, strlen(sendBuf) + 1);
+	memcpy(msg.mtext, sendBuf, sendBuf_length);
 	//msg.mtext=sendBuf;
 
-	if (msgsnd(msg_id1, &msg, strlen(sendBuf) + 1, 0) == -1)
+	if (msgsnd(msg_id1, &msg, sendBuf_length, 0) == -1)
 	{
 		printf("Client send to %d fail!\n", msg_id1);
 		return -2;
@@ -417,6 +409,8 @@ int transferMsg(MYSQL *mysql, int client_num)
 	char *username;
 	char targetUser[20];
 
+	int frame_length;
+
 	/* 对所有子进程的消息队列都试图读一遍 */
 	for (; i < client_num; i++)
 	{
@@ -436,20 +430,20 @@ int transferMsg(MYSQL *mysql, int client_num)
 			case SfhOnLine: //如果是上/下线帧，解析出username后封装s->c的帧，转发给所有用户
 			case SfhOffLine:
 				analysisSfhOnOffLine(recvMsg.mtext, username);
-				CrtOnOffFrame(username, 0, &frame);
+				frame_length = CrtOnOffFrame(username, 0, &frame);
 				memset(sendMsg.mtext, 0, BUFSIZE);
-				memcpy(sendMsg.mtext, frame, strlen(frame) + 1);
-				toAllUser(&sendMsg, client_num);
+				memcpy(sendMsg.mtext, frame, frame_length);
+				toAllUser(&sendMsg, client_num, frame_length);
 				break;
 			case SfhText: //如果是文本信息帧
 				analysisSfhText(recvMsg.mtext, targetUser, &text);
-				CrtTextFrame(username, text, &frame);
+				frame_length = CrtTextFrame(username, text, &frame);
 				memset(sendMsg.mtext, 0, BUFSIZE);
-				memcpy(sendMsg.mtext, frame, strlen(frame) + 1);
+				memcpy(sendMsg.mtext, frame, frame_length);
 				if (strcmp(targetUser, "all") == 0)
-					toAllUser(&sendMsg, client_num);
+					toAllUser(&sendMsg, client_num, frame_length);
 				else
-					toSomeone(mysql, &sendMsg, targetUser);
+					toSomeone(mysql, &sendMsg, targetUser, frame_length);
 			}
 		}
 		else if (errno == ENOMSG) //超时，没数据可读
@@ -463,7 +457,7 @@ int transferMsg(MYSQL *mysql, int client_num)
 }
 
 /* 将数据群发给所有用户 */
-int toAllUser(Msg *msg, int client_num)
+int toAllUser(Msg *msg, int client_num, int mtext_length)
 {
 	int i = 0;
 	int msg_id0, msg_id1;
@@ -472,18 +466,18 @@ int toAllUser(Msg *msg, int client_num)
 	{
 		/* 获得msg_id0,msg_id1（已存在直接返回对应的文件描述符） */
 		createMsgQue(client_num, &msg_id0, &msg_id1);
-		msgsnd(msg_id0, msg, strlen(msg->mtext) + 1, 0);
+		msgsnd(msg_id0, msg, mtext_length, 0);
 	}
 	return 0;
 }
 
 /* 将数据发送给目标用户targetUser */
-int toSomeone(MYSQL *mysql, Msg *msg, char targetUser[])
+int toSomeone(MYSQL *mysql, Msg *msg, char targetUser[], int mtext_length)
 {
 	int x = GetOnlineId(mysql, targetUser);
 	int msg_id0, msg_id1;
 	createMsgQue(x, &msg_id0, &msg_id1);
-	if (msgsnd(msg_id0, msg, strlen(msg->mtext) + 1, 0) == -1)
+	if (msgsnd(msg_id0, msg, mtext_length, 0) == -1)
 	{
 		printf("Client send to %d fail!\n", msg_id0);
 		return -2;

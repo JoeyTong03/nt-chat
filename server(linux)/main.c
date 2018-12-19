@@ -26,7 +26,6 @@ int main(int argc, char **argv)
 	if (initSocketFd(&socket_fd, atoi(argv[1])) < 0)
 		return -1;
 
-	printf("1\n");
 
 	/* 初始化数据库 */
 	InitDatabase(&mysql);
@@ -46,20 +45,15 @@ int main(int argc, char **argv)
 		if (selectRet == 0) //超时
 			continue;
 
-		printf("2\n");
 
 		if (selectRet > 0 && FD_ISSET(socket_fd, &rfd)) //说明有新的连接
 		{
-
-			printf("3\n");
 
 			/* 初始化用于连接的文件描述符 */
 			if (initConnection(&connect_fd, socket_fd) < 0)
 				continue;
 
 			client_num++; //用于消息队列的key
-
-			printf("4\n");
 
 			//如果fork失败，延时1s后继续fork
 			while ((forkStatus = fork()) < 0)

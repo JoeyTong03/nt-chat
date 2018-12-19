@@ -1,4 +1,20 @@
 #include"ServerFrame.h"
+
+void Str2int2(char*buf, int length)
+{
+	int i;
+	for (i = 0; i<length; i++)
+	{
+		if ((buf[i] >= 'a'&&buf[i] <= 'z') || (buf[i] >= 'A' && buf[i] <= 'Z') || (buf[i] >= '0'&&buf[i] <= '9')||(buf[i]=='@'))
+			printf("%c ", buf[i]);
+		else
+			printf("%x ", (int)buf[i]);
+		// if(i!=0&&i%4==0)
+		//     printf(" ");
+	}
+	printf("%c", '\n');
+}
+
 /***************************************************************************
 函数名称：getType
 功    能：根据帧头，返回帧的功能对应枚举值
