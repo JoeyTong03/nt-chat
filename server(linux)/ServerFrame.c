@@ -14,7 +14,7 @@ int getType(char buf[])
 函数名称：analysisSfhRegister
 功    能：解析报道帧
 输入参数：报道帧，client对应用户名,密码指针
-返 回 值：
+返 回 值
 说    明：使用函数时，帧以字符串形式输入，其余两个参数均已指针形式输入（在函数赋予空间）
 ***************************************************************************/
 int analysisSfhRegister(char buf[], char username[], char secret[])
@@ -67,7 +67,7 @@ int analysisSfhText(char buf[], char name[], char**Text)
 函数名称：initReplyFrame
 功    能：根据ReplyType生成应答帧replyFrame
 输入参数：应答类型，应答帧
-返 回 值：
+返 回 值：帧的长度
 说    明：
 ***************************************************************************/
 int initReplyFrame(int ReplyType, char**ReplyFrame)
@@ -78,13 +78,13 @@ int initReplyFrame(int ReplyType, char**ReplyFrame)
 	(*ReplyFrame)[1] = (char)ReplyType;
 	uint16_t length = 4;
 	memcpy((*ReplyFrame) + 2, &length, 2);
-	return 1;
+	return 4;
 }
 /***************************************************************************
 函数名称：CrtTextReplyFrame
 功    能：生成文本应答帧文本（应答类型）
 输入参数：应答类型，应答帧
-返 回 值：
+返 回 值：帧的长度
 说    明：
 ***************************************************************************/
 int CrtTextReplyFrame(int ReplyType, char**TextReplyFrame)
@@ -95,13 +95,13 @@ int CrtTextReplyFrame(int ReplyType, char**TextReplyFrame)
 	(*TextReplyFrame)[1] = (char)ReplyType;
 	uint16_t length = 4;
 	memcpy((*TextReplyFrame) + 2, &length, 2);
-	return 1;
+	return 4;
 }
 /***************************************************************************
 函数名称：CrtTextFrame
 功    能：生成文本信息帧（转发者用户名，文本信息）
 输入参数：文本信息源的用户名，文本信息，文本信息帧
-返 回 值：
+返 回 值：帧的长度
 说    明：
 ***************************************************************************/
 int CrtTextFrame(char*name, char*text, char**TextFrame)
@@ -114,13 +114,13 @@ int CrtTextFrame(char*name, char*text, char**TextFrame)
 	(*TextFrame)[4] = '@';
 	memcpy((*TextFrame) + 5, name, strlen(name) + 1);
 	memcpy((*TextFrame) + 6 + strlen(name), text, strlen(text) + 1);
-	return 1;
+	return (int)FrameLength;
 }
 /***************************************************************************
 函数名称：CrtOffLineFrame
 功    能：生成下线退位帧
 输入参数：帧
-返 回 值：
+返 回 值：帧的长度
 说    明：
 ***************************************************************************/
 int CrtOffLineFrame(char**OffLineFrame)
@@ -130,13 +130,13 @@ int CrtOffLineFrame(char**OffLineFrame)
 	*OffLineFrame[0] = (char)0x73;
 	uint16_t length = 4;
 	memcpy((*OffLineFrame) + 2, &length, 2);
-	return 1;
+	return 4;
 }
 /***************************************************************************
 函数名称：CrtOnOffFrame
 功    能：生成上/下线帧(上线或下线用户名，上线/下线状态)
 输入参数：上线或下线的用户名，上线/下线标记，帧
-返 回 值：
+返 回 值：帧的长度
 说    明：
 ***************************************************************************/
 int CrtOnOffFrame(char*name, int OnorOff, char**OnOffFrame)
@@ -147,13 +147,13 @@ int CrtOnOffFrame(char*name, int OnorOff, char**OnOffFrame)
 	(*OnOffFrame)[0] = (char)0x75;
 	memcpy((*OnOffFrame) + 2, &length, 2);
 	memcpy((*OnOffFrame) + 4, name, strlen(name));
-	return 1;
+	return 32;
 }
 /***************************************************************************
 函数名称：CrtFriInit
 功    能：生成好友初始化帧
 输入参数：用户名文本，帧
-返 回 值：
+返 回 值：帧的长度
 说    明：
 ***************************************************************************/
 int CrtFriInit(char* NameList, char**FriInitFrame)
@@ -175,13 +175,13 @@ int CrtFriInit(char* NameList, char**FriInitFrame)
 	memcpy((*FriInitFrame) + 1, &FriNum, 1);
 	memcpy((*FriInitFrame) + 2, &length, 2);
 	memcpy((*FriInitFrame) + 4, NameList, length - 4);
-	return 1;
+	return (int)(length+4);
 }
 /***************************************************************************
 函数名称：CrtOnLineFrame
 功    能：生成上线帧，将用户名包裹进去
 输入参数：用户名,帧
-返 回 值：
+返 回 值：帧的长度
 说    明：
 ***************************************************************************/
 int CrtOnLineFrame(char username[], char**frOnline)
@@ -192,7 +192,7 @@ int CrtOnLineFrame(char username[], char**frOnline)
 	(*frOnline)[0] = (char)0x77;
 	memcpy((*frOnline) + 2, &length, 2);
 	memcpy((*frOnline) + 4, username, 16);
-	return 1;
+	return 32;
 }
 /***************************************************************************
 函数名称：analysisSfhOnLine
