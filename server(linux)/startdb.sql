@@ -27,7 +27,7 @@ drop Table if exists user;
 create Table user(
     username varchar(16) not null,      /* 用户名，最大16字节 */
     keyword  varchar(12) not null,      /* 密码，最大12字节 */
-    firstlog boolean default true,      /* 首次登陆 - 默认true */
+    firstlog boolean default false,      /* 首次登陆 - 默认true */
     infonum  INT not null default 100,  /* 回看信息条数 */
     PRIMARY KEY (username)
 )character set=gbk;

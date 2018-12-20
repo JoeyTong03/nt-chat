@@ -191,7 +191,7 @@ int CrtFriInit(char* NameList, char**FriInitFrame)
 	memcpy((*FriInitFrame) + 1, &FriNum, 1);
 	memcpy((*FriInitFrame) + 2, &length, 2);
 	memcpy((*FriInitFrame) + 4, NameList, length - 4);
-	return (int)(length+4);
+	return (int)(length);
 }
 /***************************************************************************
 º¯ÊýÃû³Æ£ºCrtOnLineFrame

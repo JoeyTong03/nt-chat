@@ -80,6 +80,9 @@ int main(int argc, char **argv)
 
 		/* 循环监听子进程(客户端)发来的数据 */
 		if (getpid() == main_pid)
+		{
+			printf("This is parent code\n");
 			transferMsg(mysql, client_num);
+		}
 	}
 }

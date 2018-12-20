@@ -153,23 +153,23 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 		if (changeSecret(connect_fd, mysql, username) < 0)
 			return -4;
 
+
 	/* 发送好友初始化帧 */
 	char *nameList = GetAllUsers(mysql);
 	char *friInitFrame;
 	int friInitFrame_length;
 	friInitFrame_length = CrtFriInit(nameList, &friInitFrame);
-	FD_ZERO(&wfd);
-	FD_SET(*connect_fd, &wfd);
 
-	if (select(maxfd + 1, NULL, &wfd, NULL, NULL) > 0) //有可写的数据
+	// char tmp[]="hhh";
+	// if (send(*connect_fd, tmp, 3, 0) < 0)
+
+	if (send(*connect_fd, friInitFrame, friInitFrame_length, 0) < 0)
 	{
-		if (send(*connect_fd, friInitFrame, friInitFrame_length, 0) < 0)
-		{
-			printf("Send friInitFrame error!\n");
-			close(*connect_fd);
-			return -5;
-		}
+		printf("Send friInitFrame error!\n");
+		close(*connect_fd);
+		return -5;
 	}
+
 	return 0;
 }
 
@@ -272,6 +272,7 @@ int identify(MYSQL *mysql, char buf[], char username[], int client_num)
 
 	/* 检查用户名及密码是否正确 */
 	tmp = JudgeUser(mysql, username, secret);
+
 	switch (tmp)
 	{
 	case Right:
@@ -287,6 +288,7 @@ int identify(MYSQL *mysql, char buf[], char username[], int client_num)
 		return -5;
 	}
 	AddOnlineUser(mysql, username, client_num);
+
 	return 0;
 }
 
@@ -327,6 +329,7 @@ int changeSecret(int *connect_fd, MYSQL *mysql, char username[])
 
 	/* 更新数据库该用户的密码 */
 	UpdateSecret(mysql, username, newSecret);
+
 	return 0;
 }
 
@@ -419,11 +422,15 @@ int transferMsg(MYSQL *mysql, int client_num)
 
 		/* 获得该子进程对应的用户名 */
 		username = GetOnlineUsername(mysql, client_num);
+		printf("username: %s\n",username);
 
 		//接收消息
 		memset(recvMsg.mtext, 0, BUFSIZE);
 		if (msgrcv(msg_id1, &recvMsg, BUFSIZE, 0, IPC_NOWAIT) > 0) //有数据可读
 		{
+
+			printf("[server.c::transferMsg]-1\n");
+
 			frType = getType(recvMsg.mtext);
 			switch (frType)
 			{
@@ -434,6 +441,10 @@ int transferMsg(MYSQL *mysql, int client_num)
 				memset(sendMsg.mtext, 0, BUFSIZE);
 				memcpy(sendMsg.mtext, frame, frame_length);
 				toAllUser(&sendMsg, client_num, frame_length);
+
+				printf("parent:%s\n",sendMsg.mtext);
+				printf("[server.c::transferMsg]-2\n");
+
 				break;
 			case SfhText: //如果是文本信息帧
 				analysisSfhText(recvMsg.mtext, targetUser, &text);
