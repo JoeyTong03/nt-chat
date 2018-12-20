@@ -440,20 +440,20 @@ char *GetAllUsers(MYSQL *_mysql)
     return final;
 }
 
-void Str2int2(char *buf, int length)
-{
-    int i;
-    for (i = 0; i < length; i++)
-    {
-        if ((buf[i] >= 'a' && buf[i] <= 'z') || (buf[i] >= 'A' && buf[i] <= 'Z') || (buf[i] >= '0' && buf[i] <= '9') || (buf[i] == '@'))
-            printf("%c ", buf[i]);
-        else
-            printf("%x ", (int)buf[i]);
-        // if(i!=0&&i%4==0)
-        //     printf(" ");
-    }
-    printf("%c", '\n');
-}
+// void Str2int2(char *buf, int length)
+// {
+//     int i;
+//     for (i = 0; i < length; i++)
+//     {
+//         if ((buf[i] >= 'a' && buf[i] <= 'z') || (buf[i] >= 'A' && buf[i] <= 'Z') || (buf[i] >= '0' && buf[i] <= '9') || (buf[i] == '@'))
+//             printf("%c ", buf[i]);
+//         else
+//             printf("%x ", (int)buf[i]);
+//         // if(i!=0&&i%4==0)
+//         //     printf(" ");
+//     }
+//     printf("%c", '\n');
+// }
 
 //得到每一条服务端子进程向客户端所发的消息
 int GetSendMessage(MYSQL *_mysql, char *_username, char ***_return)

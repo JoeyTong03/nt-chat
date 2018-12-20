@@ -33,14 +33,7 @@
 #define FLAG_ALL 1
 #define FLAG_SOMEONE 0
 
-//解析报道帧时的结果类型
-enum IdentifyResultType
-{
-	Right=1,
-	SecretErr,
-	NameNoExist,
-	NeedUpdateSecret
-};
+
 
 typedef struct Msg
 {
@@ -81,12 +74,5 @@ int getTargetUsername(char buf[],char targetUsername[],int* isToALL);
 
 /* username将数据帧发给所有用户 */
 int toAllUsers(MYSQL* mysql,char username[],char *msg);
-
-
-//得到每一条服务端子进程向客户端所发的消息
-int GetSendMessage(MYSQL* _mysql,char* username,char*** buf);
-
-//服务端子进程向其他子进程发送包装好的帧
-void SetMessageToDB(MYSQL* _mysql,char* fromuser,char* touser,char* msg);
 
 #endif

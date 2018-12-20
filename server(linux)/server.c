@@ -417,18 +417,3 @@ int toAllUsers(MYSQL* mysql,char username[],char *msg)
 		printf("[%s send data to %s]:%s\n",username,targetUsername,msg);
 	}
 }
-
-
-
-
-//得到每一条服务端子进程向客户端所发的消息
-int GetSendMessage(MYSQL* _mysql,char* username,char*** buf)
-{
-	return 0;
-}
-
-//服务端子进程向其他子进程发送包装好的帧
-void SetMessageToDB(MYSQL* _mysql,char* fromuser,char* touser,char* msg)
-{
-	return;
-}

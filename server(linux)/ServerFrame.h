@@ -11,6 +11,15 @@
 // 	NameNoExist,		//用户不存在
 // 	NeedUpdateSecret	//是否需要改密
 // };
+
+//解析报道帧时的结果类型
+enum IdentifyResultType
+{
+	Right=1,
+	SecretErr,
+	NameNoExist,
+	NeedUpdateSecret
+};
 //文本应答帧的应答类型
 enum IdentifyTextType
 {
