@@ -27,8 +27,11 @@
 
 #define MAXNUM_CLIENT 10 //最多的客户端数量
 
-#include "ServerFrame.h"
+#include "ServerWriteLog.h"
 #include "db.h"
+
+#define FLAG_ALL 1
+#define FLAG_SOMEONE 0
 
 //解析报道帧时的结果类型
 enum IdentifyResultType
@@ -64,25 +67,26 @@ int identify(MYSQL *mysql,char buf[],char username[],int client_num);
 /* 等待接收改密帧，并在服务端完成数据更新 */
 int changeSecret(int *connect_fd, MYSQL *mysql, char username[]);
 
+/* 向其他用户发送上线帧 */
+int sendOnlineFrame(MYSQL* mysql,char username[]);
+
+
 /* 向其他用户发送上线帧后进入聊天状态 */
 int interactBridge(int *connect_fd, MYSQL *mysql,char username[],int client_num);
 
-/* 建立消息队列/获取client_num参数对应的子进程的消息队列句柄*/
-int createMsgQue(int _client_num,int *msg_id0,int *msg_id1);
 
-/* 子进程向父进程发送帧 */
-int sub2main(char *sendBuf,int msg_id1,int sendBuf_length);
 
-/* 子进程从父进程获取帧 */
-int subFromMain(char subRecvBuf[],int msg_id0);
+/* 解析sendBuf获得目标用户名targetUserName */
+int getTargetUsername(char buf[],char targetUsername[],int* isToALL);
 
-/* 收发子进程过来的数据 */
-int transferMsg(MYSQL *mysql,int client_num);
+/* username将数据帧发给所有用户 */
+int toAllUsers(MYSQL* mysql,char username[],char *msg);
 
-/* 将数据群发给所有用户 */
-int toAllUser(struct Msg* msg,int client_num,int mtext_length);
 
-/* 将数据发送给目标用户targetUser */
-int toSomeone(MYSQL *mysql,Msg *msg,char targetUser[],int mtext_length);
+//得到每一条服务端子进程向客户端所发的消息
+int GetSendMessage(MYSQL* _mysql,char* username,char*** buf);
+
+//服务端子进程向其他子进程发送包装好的帧
+void SetMessageToDB(MYSQL* _mysql,char* fromuser,char* touser,char* msg);
 
 #endif

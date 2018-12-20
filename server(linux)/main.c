@@ -1,7 +1,6 @@
 /* main.c */
 #include "server.h"
 
-//bool isOnLine[128]=0;
 int main(int argc, char **argv)
 {
 	/*---------------变量定义------------------ */
@@ -35,13 +34,13 @@ int main(int argc, char **argv)
 	{
 
 		/* 监听是否有新的连接；如果有，则fork子进程处理并发连接 */
-		fd_set rfd, wfd;
-		struct timeval timeout = {0, 30}; //30ms一轮，超时就进入下一个循环
+		fd_set rfd;
+		//struct timeval timeout = {0, 30}; //30ms一轮，超时就进入下一个循环
 		maxfd = socket_fd;
 		FD_ZERO(&rfd);
 		FD_SET(socket_fd, &rfd);
-		selectRet = select(maxfd + 1, &rfd, NULL, NULL, &timeout);
-
+		//selectRet = select(maxfd + 1, &rfd, NULL, NULL, &timeout);
+		selectRet = select(maxfd + 1, &rfd, NULL, NULL, NULL);
 		if (selectRet == 0) //超时
 			continue;
 
@@ -78,11 +77,6 @@ int main(int argc, char **argv)
 			}
 		}
 
-		/* 循环监听子进程(客户端)发来的数据 */
-		if (getpid() == main_pid)
-		{
-			printf("This is parent code\n");
-			transferMsg(mysql, client_num);
-		}
+
 	}
 }

@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include "ServerFrame.h"
 // //文本应答帧的应答类型
 // enum IdentifyTextType
 // {

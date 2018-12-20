@@ -61,7 +61,7 @@ int analysisSfhChangeSecret(char buf[], char newSecret[])
 函数名称：analysisSfhText
 功    能：解析文本信息帧
 输入参数：帧，来源client用户名，文本内容二级指针
-返 回 值：
+返 回 值：name是返回的目标用户
 说    明：在函数外将定义文本信息的指针，并用一个二级指针指向该指针，作为输入的参数
 ***************************************************************************/
 int analysisSfhText(char buf[], char name[], char**Text)

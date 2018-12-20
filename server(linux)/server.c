@@ -114,7 +114,7 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 		}
 	}
 
-	/* 对首帧进行检验 */
+	/* 对首帧进行检验，如果正确直接更新数据库*/
 	int identifyResult = identify(mysql, recvBuf, username, client_num);
 	switch (identifyResult)
 	{
@@ -147,106 +147,148 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 			return -3;
 		}
 	}
+	
 
+	/* 更新在线用户 */
+	AddOnlineUser(mysql, username, client_num);
+	
+	/* 将登陆信息写入日志，包括成功/失败 */
+	WriteReglog(username,replyType);
+	
+	
 	/* 如果需要修改密码，等待客户端发送SfhChangeSecret帧，并获取其中的密码，更新数据库 */
 	if (replyType == NeedUpdateSecret)
+	{
 		if (changeSecret(connect_fd, mysql, username) < 0)
 			return -4;
+		WriteChgPswdlog(username);		
+	}
+		
 
 
-	/* 发送好友初始化帧 */
+	/* 给该客户端发送好友初始化帧 */
 	char *nameList = GetAllUsers(mysql);
 	char *friInitFrame;
 	int friInitFrame_length;
 	friInitFrame_length = CrtFriInit(nameList, &friInitFrame);
-
-	// char tmp[]="hhh";
-	// if (send(*connect_fd, tmp, 3, 0) < 0)
-
 	if (send(*connect_fd, friInitFrame, friInitFrame_length, 0) < 0)
 	{
 		printf("Send friInitFrame error!\n");
 		close(*connect_fd);
 		return -5;
 	}
-
+	
+	/* 给其他用户发送该用户的上线帧 */
+	sendOnlineFrame(mysql,username);
+	
 	return 0;
 }
 
 /* 向其他用户发送上线帧后进入聊天状态 */
 int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 {
-	/* 生成一个上线帧 */
-	char *onlineFrame;
-	int onlineFrame_length;
-	onlineFrame_length = CrtOnLineFrame(username, &onlineFrame); //函数内部申请空间
-
-	/* 创建消息队列 */
-	int msg_id0, msg_id1;
-	createMsgQue(client_num, &msg_id0, &msg_id1);
-
-	/* 传递给父进程 */
-	sub2main(onlineFrame, msg_id1, onlineFrame_length);
-
-	/* 进入聊天状态，收发client端的帧，直接扔给父进程 */
-	fd_set rfd, wfd;
-	int maxfd;
-	char recvBuf[BUFSIZE], sendBuf[BUFSIZE];
+	
+	printf("Begin communication!\n");
+	
+	int sendCount=0;//需要发送给子进程对应客户端的数据帧数量
+	char **sendBuf;//需要发送给子进程对应客户端的数据帧(二维数组)
+	char recvBuf[BUFSIZE];//从子进程对应客户端收到的数据帧
+	
+	fd_set rfd;
+	int maxfd ;
+	struct timeval tv;
 	int ret;
-	while (1)
+	
+	
+	char targetUsername[20];
+	int isToALL=0;//是否是发给所有用户
+	char *msg;//子进程对应的客户端准备发送的数据帧
+	int frameType=0;//从子进程对应的客户端收到的帧的类型
+	
+	
+	
+	
+
+	while(1)
 	{
-		FD_ZERO(&rfd);
-		FD_ZERO(&wfd);
-		FD_SET(*connect_fd, &rfd);
-		FD_SET(*connect_fd, &wfd);
-		memset(recvBuf, 0, BUFSIZE);
-		memset(sendBuf, 0, BUFSIZE);
-		maxfd = *connect_fd;
-		ret = select(maxfd + 1, &rfd, &wfd, NULL, NULL);
-		if (ret > 0 && FD_ISSET(*connect_fd, &rfd)) //有可读的数据
+		/* 查看是否有数据需要发送给该子进程对应的客户端 */
+		sendCount=GetSendMessage(mysql,username,&sendBuf);
+		
+		int i;
+		for(i=0;i<sendCount;i++)
 		{
-			if (recv(*connect_fd, recvBuf, BUFSIZE, 0) < 0)
+			if(send(*connect_fd,sendBuf[i],BUFSIZE,0)<0)
 			{
-				printf("Recv fail!\n");
-				close(*connect_fd);
+				printf("Send error!\n");
 				return -2;
 			}
-
-			else
-			{
-				/* 传递给父进程 */
-				uint16_t recvBuf_length;
-				memcpy(&recvBuf_length, recvBuf + 2, 2);
-				sub2main(recvBuf, msg_id1, (int)recvBuf_length);
-
-				/* 判断是否是下线帧 */
-				if (getType(recvBuf) == SfhOffLine) //如果是下线帧
-				{
-					printf("User %s offline!\n", username);
-
-					/* 删除数据库“在线用户表”中的该用户记录 */
-					DelOnlineUser(mysql, username);
-
-					close(*connect_fd);
-					break;
-				}
-			}
-		}
-		if (ret > 0 && FD_ISSET(*connect_fd, &wfd)) //有可写的数据
+			printf("[others send to %s]:%s\n",username,sendBuf[i]);
+			usleep(10);
+		}		
+		
+		
+		/* 查看子进程对应的客户端是否有数据要发送 */
+		FD_ZERO(&rfd);
+        tv.tv_sec = 0;
+        tv.tv_usec = 300;
+		maxfd = *connect_fd;
+		FD_SET(*connect_fd, &rfd);
+		ret = select(maxfd+1,&rfd,NULL,NULL,&tv);
+		if(ret<0)
 		{
-			/* 从父进程读取帧到sendBuf中 */
-			if (subFromMain(sendBuf, msg_id0) == 1)
+			printf("select error!\n");
+			break;
+		}
+		else if(ret==0)
+			continue;
+		else
+		{
+			/* 接收从client端发来的帧 */
+			if (recv(*connect_fd, recvBuf, BUFSIZE, 0) < 0)
 			{
-				/* 发送给该子进程关联的用户 */
-				if (send(*connect_fd, sendBuf, BUFSIZE, 0) < 0)
+				printf("Recv frame error!\n");
+				close(*connect_fd);
+				return -3;
+			}
+			
+			
+			
+			frameType=getType(recvBuf);
+
+			if(frameType==SfhOnLine || frameType==SfhOffLine)
+			{
+				toAllUsers(mysql,username,recvBuf);
+				if(frameType==SfhOffLine)
 				{
-					printf("Send fail!\n");
-					close(*connect_fd);
-					return -3;
+					printf("User %s offline!\n",username);
+					DelOnlineUser(mysql,username);
+					WriteOfflinelog(username);
+				}
+				
+			}
+			else if(frameType==SfhText)
+			{
+				CrtTextFrame(username,recvBuf,&msg);
+					
+				isToALL=0;
+				getTargetUsername(recvBuf,targetUsername,&isToALL);
+				
+				if(isToALL)
+				{
+					toAllUsers(mysql,username,msg);
+					WriteAllLog(username);
+				}
+				else
+				{	
+					SetMessageToDB(mysql,username,targetUsername,msg);
+					printf("[%s send data to %s]:%s\n",username,targetUsername,recvBuf);
+					WriteSendText(username,targetUsername,0);//0是发送成功或失败的类型
 				}
 			}
 		}
+		
 	}
+	
 	return 0;
 }
 
@@ -287,8 +329,7 @@ int identify(MYSQL *mysql, char buf[], char username[], int client_num)
 		printf("Need update secret!\n");
 		return -5;
 	}
-	AddOnlineUser(mysql, username, client_num);
-
+	
 	return 0;
 }
 
@@ -333,166 +374,61 @@ int changeSecret(int *connect_fd, MYSQL *mysql, char username[])
 	return 0;
 }
 
-/* 创建消息队列,key=client_num*100---main->sub
-	key=client_num*100+1---sub->main
-	返回消息队列标识符
-*/
-int createMsgQue(int _client_num, int *msg_id0, int *msg_id1)
+/* 如果是给所有用户的，则isToALL=1;否则通过targetUsername返回目标用户名 */
+int getTargetUsername(char buf[],char targetUsername[],int *isToALL)
 {
-	*msg_id0 = msgget(_client_num * 100, IPC_CREAT | 0666);
-	if (*msg_id0 == -1)
-	{
-		printf("client %d create MQ0 fail!", _client_num);
-		return -2;
-	}
-
-	*msg_id1 = msgget(_client_num * 100 + 1, IPC_CREAT | 0666);
-	if (*msg_id1 == -1)
-	{
-		printf("client %d create MQ1 fail!", _client_num);
-		return -3;
-	}
+	strcpy(targetUsername,buf+4);
+	if(strcmp(targetUsername,"all")==0)
+		*isToALL=1;
 	return 0;
 }
 
-/* 
-功能：子进程向父进程发送数据 
-参数：sendBuf--要发送的数据  index--是第几个子进程
-*/
-int sub2main(char *sendBuf, int msg_id1, int sendBuf_length)
+int sendOnlineFrame(MYSQL* mysql,char username[])
 {
-	struct Msg msg;
-	msg.mtype = 1;
-	memcpy(msg.mtext, sendBuf, sendBuf_length);
-	//msg.mtext=sendBuf;
-
-	if (msgsnd(msg_id1, &msg, sendBuf_length, 0) == -1)
-	{
-		printf("Client send to %d fail!\n", msg_id1);
-		return -2;
-	}
+	/* 生成一个上线帧 */
+	char *onlineFrame;
+	int onlineFrame_length;
+	onlineFrame_length = CrtOnLineFrame(username, &onlineFrame); //函数内部申请空间
+	printf("The online-frame is %s\n",onlineFrame);
+	
+	/* 将上线帧发送给所有用户 */	
+	toAllUsers(mysql,username,onlineFrame);
 	return 0;
 }
 
-/* 
-功能：子进程从父进程读数据
-参数：subRecvBuf--接收的数据  index--第几个子进程
- */
-int subFromMain(char subRecvBuf[], int msg_id0)
+int toAllUsers(MYSQL* mysql,char username[],char *msg)
 {
-	struct Msg msg;
-	msg.mtype = 1;
-	memset(msg.mtext, 0, BUFSIZE);
+	char* p;
+	char *allUserText;//所有在线用户，格式：“@name1\0@name2\0....#”
+	char targetUsername[20];
 
-	//有数据可以读
-	if (msgrcv(msg_id0, &msg, BUFSIZE, 0, IPC_NOWAIT) > 0)
+	allUserText=GetAllUsers(mysql);
+	p=allUserText+1;
+	while(1)
 	{
-		memcpy(subRecvBuf, msg.mtext, BUFSIZE);
-		return 1;
-	}
-	else if (errno == ENOMSG)
-		return 0;
-	else
-	{
-		printf("Client write to %d fail!\n", msg_id0);
-		return -1;
-	}
-	return 0;
-}
-
-/* 收发子进程过来的数据 */
-int transferMsg(MYSQL *mysql, int client_num)
-{
-	int i = 0;
-	int frType;
-	int msg_id0, msg_id1;
-	char *text, *frame;
-	struct Msg recvMsg, sendMsg;
-
-	char *username;
-	char targetUser[20];
-
-	int frame_length;
-
-	/* 对所有子进程的消息队列都试图读一遍 */
-	for (; i < client_num; i++)
-	{
-		/* 获得msg_id0,msg_id1 */
-		createMsgQue(client_num, &msg_id0, &msg_id1);
-
-		/* 获得该子进程对应的用户名 */
-		username = GetOnlineUsername(mysql, client_num);
-		printf("username: %s\n",username);
-
-		//接收消息
-		memset(recvMsg.mtext, 0, BUFSIZE);
-		if (msgrcv(msg_id1, &recvMsg, BUFSIZE, 0, IPC_NOWAIT) > 0) //有数据可读
-		{
-
-			printf("[server.c::transferMsg]-1\n");
-
-			frType = getType(recvMsg.mtext);
-			switch (frType)
-			{
-			case SfhOnLine: //如果是上/下线帧，解析出username后封装s->c的帧，转发给所有用户
-			case SfhOffLine:
-				analysisSfhOnOffLine(recvMsg.mtext, username);
-				frame_length = CrtOnOffFrame(username, 0, &frame);
-				memset(sendMsg.mtext, 0, BUFSIZE);
-				memcpy(sendMsg.mtext, frame, frame_length);
-				toAllUser(&sendMsg, client_num, frame_length);
-
-				printf("parent:%s\n",sendMsg.mtext);
-				printf("[server.c::transferMsg]-2\n");
-
-				break;
-			case SfhText: //如果是文本信息帧
-				analysisSfhText(recvMsg.mtext, targetUser, &text);
-				frame_length = CrtTextFrame(username, text, &frame);
-				memset(sendMsg.mtext, 0, BUFSIZE);
-				memcpy(sendMsg.mtext, frame, frame_length);
-				if (strcmp(targetUser, "all") == 0)
-					toAllUser(&sendMsg, client_num, frame_length);
-				else
-					toSomeone(mysql, &sendMsg, targetUser, frame_length);
-			}
-		}
-		else if (errno == ENOMSG) //超时，没数据可读
+		strcpy(targetUsername,p);
+		p+=(strlen(targetUsername)+2);
+		if(*p=='#')
+			break;
+		if(strcmp(targetUsername,username)==0)
 			continue;
-		else
-		{
-			printf("Server read from %d fail!\n", client_num);
-			return -1;
-		}
+		
+		SetMessageToDB(mysql,username,targetUsername,msg);
+		printf("[%s send data to %s]:%s\n",username,targetUsername,msg);
 	}
 }
 
-/* 将数据群发给所有用户 */
-int toAllUser(Msg *msg, int client_num, int mtext_length)
+
+
+
+//得到每一条服务端子进程向客户端所发的消息
+int GetSendMessage(MYSQL* _mysql,char* username,char*** buf)
 {
-	int i = 0;
-	int msg_id0, msg_id1;
-	//在父进程中client_num代表子进程数量
-	for (; i < client_num; i++)
-	{
-		/* 获得msg_id0,msg_id1（已存在直接返回对应的文件描述符） */
-		createMsgQue(client_num, &msg_id0, &msg_id1);
-		msgsnd(msg_id0, msg, mtext_length, 0);
-	}
 	return 0;
 }
 
-/* 将数据发送给目标用户targetUser */
-int toSomeone(MYSQL *mysql, Msg *msg, char targetUser[], int mtext_length)
+//服务端子进程向其他子进程发送包装好的帧
+void SetMessageToDB(MYSQL* _mysql,char* fromuser,char* touser,char* msg)
 {
-	int x = GetOnlineId(mysql, targetUser);
-	int msg_id0, msg_id1;
-	createMsgQue(x, &msg_id0, &msg_id1);
-	if (msgsnd(msg_id0, msg, mtext_length, 0) == -1)
-	{
-		printf("Client send to %d fail!\n", msg_id0);
-		return -2;
-	}
-	else
-		return 0;
+	return;
 }
