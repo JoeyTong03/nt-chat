@@ -38,3 +38,9 @@ int GetOnlineId(MYSQL *_mysql, char *_username);
 
 //返回当前所有在线用户
 char *GetAllUsers(MYSQL *_mysql);
+
+//得到每一条服务端子进程向客户端所发的消息
+int GetSendMessage(MYSQL* _mysql,char* username,char*** _return);
+
+//服务端子进程向其他子进程发送包装好的帧
+void SetMessageToDB(MYSQL* _mysql,char* fromuser,char* touser,char* msg);
