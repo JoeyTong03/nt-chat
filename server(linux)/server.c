@@ -147,21 +147,21 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 			return -3;
 		}
 	}
-	
 
-	/* 更新在线用户 */
+		/* 更新在线用户 */
 	AddOnlineUser(mysql, username, client_num);
-	
+
 	/* 将登陆信息写入日志，包括成功/失败 */
 	WriteReglog(username,replyType);
-	
 	
 	/* 如果需要修改密码，等待客户端发送SfhChangeSecret帧，并获取其中的密码，更新数据库 */
 	if (replyType == NeedUpdateSecret)
 	{
+		printf("Change keyword begin\n");
 		if (changeSecret(connect_fd, mysql, username) < 0)
 			return -4;
 		WriteChgPswdlog(username);		
+		printf("Change keyword end\n");
 	}
 		
 
@@ -177,7 +177,9 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 		close(*connect_fd);
 		return -5;
 	}
-	
+
+	Str2int2("user:%s - nameList:\n%s\n",username,nameList);
+
 	/* 给其他用户发送该用户的上线帧 */
 	sendOnlineFrame(mysql,username);
 	

@@ -16,18 +16,12 @@ int main(int argc, char **argv)
 
 	char username[20]; //用户名
 
-	MYSQL *mysql; //数据库句柄
-
 	/*---------------信号处理------------------- */
 	(void)signal(SIGCHLD, wait4children);
 
 	/* 初始化socket文件描述符 */
 	if (initSocketFd(&socket_fd, atoi(argv[1])) < 0)
 		return -1;
-
-
-	/* 初始化数据库 */
-	InitDatabase(&mysql);
 
 	main_pid = getpid();		 //父进程的pid号
 	while (getpid() == main_pid) //只允许父进程fork子进程
@@ -43,7 +37,6 @@ int main(int argc, char **argv)
 		selectRet = select(maxfd + 1, &rfd, NULL, NULL, NULL);
 		if (selectRet == 0) //超时
 			continue;
-
 
 		if (selectRet > 0 && FD_ISSET(socket_fd, &rfd)) //说明有新的连接
 		{
@@ -61,6 +54,10 @@ int main(int argc, char **argv)
 			//子进程处理与client端的交互
 			if (forkStatus == 0)
 			{
+				MYSQL *mysql; //数据库句柄
+
+				/* 初始化数据库 */
+				InitDatabase(&mysql);
 
 				printf("Client %d connected!\n", client_num);
 
@@ -76,7 +73,5 @@ int main(int argc, char **argv)
 			{
 			}
 		}
-
-
 	}
 }

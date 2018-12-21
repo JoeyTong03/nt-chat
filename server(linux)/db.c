@@ -389,7 +389,8 @@ char* GetAllOnlineUsers(MYSQL *_mysql)
     char sql[200];
     sprintf(
         sql,
-        "select * from onlineuser;");
+        "select * from onlineuser;"
+    );
 
     if (mysql_query(_mysql, sql))
     {
@@ -415,14 +416,14 @@ char* GetAllOnlineUsers(MYSQL *_mysql)
     {
         if (buf == NULL)
         {
-            size = strlen(row[0]) + 2;
+            size = strlen(row[0]) + 2; //@ + row[0]字符串的长度(不包括\0) + \0
             buf = (char *)malloc(size * sizeof(char));
             sprintf(buf, "@%s", row[0]);
         }
         else
         {
             char *tmpbuf = NULL;
-            size += strlen(row[0]) + 2;
+            size += strlen(row[0]) + 1; //之前的字符串(包含\0) + @ + row[0]字符串长度
             tmpbuf = (char *)malloc(size * sizeof(char));
             sprintf(tmpbuf, "%s@%s", buf, row[0]);
             free(buf);
@@ -430,7 +431,8 @@ char* GetAllOnlineUsers(MYSQL *_mysql)
         }
     }
 
-    char *final = (char *)malloc(sizeof(char) * (size + 1));
+    size++;//size 多加一个#
+    char *final = (char *)malloc(sizeof(char) * (size));
     sprintf(final, "%s#", buf);
     free(buf);
 
