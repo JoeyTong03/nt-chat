@@ -369,7 +369,7 @@ void PackMsg(char _msg[], int _len)
             (_msg)[i] = '`';
 }
 
-void UnpackMsg(char* _msg, int _len)
+void UnpackMsg(char *_msg, int _len)
 {
     int i = 0;
     for (i = 0; i < _len; i++)
@@ -440,20 +440,20 @@ char *GetAllUsers(MYSQL *_mysql)
     return final;
 }
 
-// void Str2int2(char *buf, int length)
-// {
-//     int i;
-//     for (i = 0; i < length; i++)
-//     {
-//         if ((buf[i] >= 'a' && buf[i] <= 'z') || (buf[i] >= 'A' && buf[i] <= 'Z') || (buf[i] >= '0' && buf[i] <= '9') || (buf[i] == '@'))
-//             printf("%c ", buf[i]);
-//         else
-//             printf("%x ", (int)buf[i]);
-//         // if(i!=0&&i%4==0)
-//         //     printf(" ");
-//     }
-//     printf("%c", '\n');
-// }
+void Str2int2(char *buf, int length)
+{
+    int i;
+    for (i = 0; i < length; i++)
+    {
+        if ((buf[i] >= 'a' && buf[i] <= 'z') || (buf[i] >= 'A' && buf[i] <= 'Z') || (buf[i] >= '0' && buf[i] <= '9') || (buf[i] == '@'))
+            printf("%c ", buf[i]);
+        else
+            printf("%x ", (int)buf[i]);
+        // if(i!=0&&i%4==0)
+        //     printf(" ");
+    }
+    printf("%c", '\n');
+}
 
 //得到每一条服务端子进程向客户端所发的消息
 int GetSendMessage(MYSQL *_mysql, char *_username, char ***_return)
@@ -498,7 +498,7 @@ int GetSendMessage(MYSQL *_mysql, char *_username, char ***_return)
        1、返回的列顺序与select指定的列顺序相同，从row[0]开始
        2、不论数据库中是什么类型，C中都当作是字符串来进行处理，如果有必要，需要自己进行转换
        3、根据自己的需要组织输出格式 */
-    
+
     //printf("\n ----------------- \n 数据库代码中测试 \n");
 
     i = 0;
@@ -521,6 +521,23 @@ int GetSendMessage(MYSQL *_mysql, char *_username, char ***_return)
         // Str2int2((*_return)[i], len);
 
         i++;
+
+        /* * * * *
+     *向数据库更新已经完成的这些操作     * 
+     * * * * */
+
+        char update_sql[200];
+        sprintf(
+            update_sql,
+            "update cMessage set read_flag=false where to_user='%s' and msg='%s' and read_flag=true",
+            _username,
+            row[0]);
+
+        if (mysql_query(_mysql, update_sql))
+        {
+            printf("mysql_query_connect failed(%s)", mysql_error(_mysql));
+            return -1;
+        }
     }
 
     /* 释放result */
@@ -551,8 +568,6 @@ void SetMessageToDB(MYSQL *_mysql, char *fromuser, char *touser, char *msg)
         return;
     }
 };
-
-
 
 //#define TESTDB
 #ifdef TESTDB
@@ -645,6 +660,8 @@ int main(int argc, char *argv[])
     SetMessageToDB(mysql, from, to, msg4);
     SetMessageToDB(mysql, from, to, msg5);
 
+    printf("\n-------------------------\n第一次查询\n");
+
     char **get = NULL;
     int gnum = GetSendMessage(mysql, to, &get);
     printf("num:%d\n", gnum);
@@ -652,7 +669,18 @@ int main(int argc, char *argv[])
     int i = 0;
     for (i = 0; i < gnum; i++)
     {
-        Str2int2(get[i],num);
+        Str2int2(get[i], num);
+    }
+
+    printf("\n-------------------------\n第2次查询\n");
+    get = NULL;
+
+    gnum = GetSendMessage(mysql, to, &get);
+    printf("num:%d\n", gnum);
+
+    for (i = 0; i < gnum; i++)
+    {
+        Str2int2(get[i], num);
     }
 
     /* 关闭整个连接 */
