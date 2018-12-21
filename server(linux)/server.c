@@ -2,6 +2,26 @@
 #include "server.h"
 #include <stdint.h>
 
+
+/* 判断用户username是否存在，存在则返回1，否则返回0 */
+int JudgeExist(MYSQL* mysql,char username[])
+{
+	return 1;
+}
+
+/* 判断用户username是否在线，在线则返回1，否则返回0 */
+int JudgeOnline(MYSQL* mysql,char username[])
+{
+	return 1;
+}
+
+
+
+
+
+
+
+
 /* 等待子进程结束，避免出现僵尸进程 */
 void wait4children(int sig)
 {
@@ -139,10 +159,7 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 
 	/* 发送应答帧 */
 	initReplyFrame(replyType, &sendBuf);
-	// FD_SET(*connect_fd, &wfd);
-	// if (select(maxfd + 1, NULL, &wfd, NULL, NULL) > 0) //有可写的数据
-	// {
-	if (send(*connect_fd, sendBuf, LEN32, 0) < 0)
+	if (send(*connect_fd, sendBuf, 4, 0) < 0)
 	{
 		printf("Send reply error!\n");
 		close(*connect_fd);
@@ -152,11 +169,6 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 
 	/* 更新在线用户 */
 	AddOnlineUser(mysql, username, client_num);
-//	printf("user:%s finish - addonlineuser\n", username);
-
-	/* 将登陆信息写入日志，包括成功/失败 */
-	//WriteReglog(username, replyType);
-//	printf("user:%s finish - writelog\n", username);
 
 	/* 如果需要修改密码，等待客户端发送SfhChangeSecret帧，并获取其中的密码，更新数据库 */
 	if (replyType == NeedUpdateSecret)
@@ -185,11 +197,6 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 		close(*connect_fd);
 		return -5;
 	}
-//	printf("user:%s finish - send friend init frame\n", username);
-
-//	printf("user:%s - len:%d - nameList:\n", username, friInitFrame_length);
-//	Str2int2(friInitFrame, friInitFrame_length);
-//	printf("\n\n");
 
 	/* 给其他用户发送该用户的上线帧 */
 	sendOnlineFrame(mysql, username);
@@ -288,7 +295,28 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				 * 要发出去的文本信息帧
 				 *********************************/
 				 
+				 /* 解析文本信息帧，返回目标用户以及需要发送的文本 */
 				analysisSfhText(recvBuf,targetUsername,&text);
+				
+				/* 判断应答类型并发送应答帧 */
+ 				if(JudgeExist(mysql,targetUsername)==0)//用户不存在
+					replyType=FriNotExist;
+				else if(JudgeOnline(mysql,targetUsername)==0)//用户不在线
+					replyType=FriOffLine;
+				else
+					replyType=Right;
+				CrtTextReplyFrame(replyType,&msg);
+				if(send(*connect_fd,msg,4,0)<0)
+				{
+					printf("server send textReply to %s error!\n",username);
+					return -2;
+				}	
+				printf("server send textReply to %s successfully!\n",username); 
+				
+				
+				
+				
+				
 				CrtTextFrame(username, text, &msg);
 				
 				uint16_t msglen=0;
@@ -308,16 +336,6 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 					Str2int2(msg,msglen);
 					WriteSendText(username, targetUsername, 0); //0是发送成功或失败的类型
 				}
-				
-				/* 发送文本信息应答帧 */
-				replyType=Right;
-				CrtTextReplyFrame(replyType,&msg);
-				if (send(*connect_fd, msg, 4, 0) < 0)
-				{
-					printf("Send textReply error!\n");
-					return -3;
-				}
-				printf("%s send textReply successfully!\n",username);
 			}
 		}
 	}

@@ -3,14 +3,6 @@
 #include<stdlib.h>
 #include<stdint.h>
 #include<string.h>
-//报道应答帧的应答类型
-// enum IdentifyResultType
-// {
-// 	Right = 0,			//正确
-// 	SecretErr,			//密码错误
-// 	NameNoExist,		//用户不存在
-// 	NeedUpdateSecret	//是否需要改密
-// };
 
 //解析报道帧时的结果类型
 enum IdentifyResultType
@@ -47,7 +39,6 @@ enum ReceiveFrameHeadType
 	RfhBeKicked = 0x73,		//下线退位帧
 	RfhOnOffLine = 0x75,	//上/下线帧
 	RfhInit = 0x76			//好友初始化帧
-	// OnOffLine = 0x78		//上线帧（我也不知道放在这里对不对）
 };
 /********************C->S的帧解析部分*******************/
 //根据收到的帧，返回属于哪个帧类型：
