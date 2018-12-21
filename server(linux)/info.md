@@ -148,8 +148,8 @@ M：				发送上线帧(T上线)
 	接受到好友上线帧
 
 T：	发送消息给M[This is message from tongjiayan]
-//				发送消息应答帧
-//	接受消息应答帧
+				发送消息应答帧
+	接受消息应答帧
 
 M:				发送消息帧
 	接受消息帧
@@ -169,12 +169,17 @@ T：				发送上线帧(Z上线)
 	接受到好友上线帧
 
 Z：	发送消息给M[This is message from zhengxuanci]
+				发送消息应答帧
+	接受消息应答帧
 
 M:				发送消息帧
 	接受消息帧
 
 Z：	发送消息给T[This is message from zhengxuanci]
+				发送消息应答帧
+	接受消息应答帧
 
+	
 T:				发送消息帧
 	接受消息帧
 
