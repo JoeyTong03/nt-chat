@@ -2,25 +2,17 @@
 #include "server.h"
 #include <stdint.h>
 
-
 /* 判断用户username是否存在，存在则返回1，否则返回0 */
-int JudgeExist(MYSQL* mysql,char username[])
+int JudgeExist(MYSQL *mysql, char username[])
 {
 	return 1;
 }
 
 /* 判断用户username是否在线，在线则返回1，否则返回0 */
-int JudgeOnline(MYSQL* mysql,char username[])
+int JudgeOnline(MYSQL *mysql, char username[])
 {
 	return 1;
 }
-
-
-
-
-
-
-
 
 /* 等待子进程结束，避免出现僵尸进程 */
 void wait4children(int sig)
@@ -176,20 +168,20 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 		printf("Change keyword begin\n");
 		if (changeSecret(connect_fd, mysql, username) < 0)
 			return -4;
-		WriteChgPswdlog(username);
+		//WriteChgPswdlog(username);
 		printf("Change keyword end\n");
 	}
 
-//	printf("user:%s finish - updatekeyword\n", username);
+	//	printf("user:%s finish - updatekeyword\n", username);
 
 	/* 给该客户端发送好友初始化帧 */
 	char *nameList = GetAllUsers(mysql);
-//	printf("user:%s finish - getalluser\n", username);
+	//	printf("user:%s finish - getalluser\n", username);
 
 	char *friInitFrame;
 	int friInitFrame_length;
 	friInitFrame_length = CrtFriInit(nameList, &friInitFrame);
-//	printf("user:%s finish - crtfriInit\n", username);
+	//	printf("user:%s finish - crtfriInit\n", username);
 
 	if (send(*connect_fd, friInitFrame, friInitFrame_length, 0) < 0)
 	{
@@ -220,12 +212,12 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 	int ret;
 
 	char targetUsername[20];
-	int isToALL = 0;   //是否是发给所有用户
-	char *msg;		   //子进程对应的客户端准备发送的数据帧
+	int isToALL = 0; //是否是发给所有用户
+	char *msg;		 //子进程对应的客户端准备发送的数据帧
 	char *text;
 	int frameType = 0; //从子进程对应的客户端收到的帧的类型
 
-	int replyType=Right;
+	int replyType = Right;
 	while (1)
 	{
 		/* 查看是否有数据需要发送给该子进程对应的客户端 */
@@ -234,10 +226,9 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 		int i;
 		for (i = 0; i < sendCount; i++)
 		{
-			uint16_t len=0;
-			memcpy(&len,&(sendBuf[i][2]),2);
-			
-			
+			uint16_t len = 0;
+			memcpy(&len, &(sendBuf[i][2]), 2);
+
 			if (send(*connect_fd, sendBuf[i], len, 0) < 0)
 			{
 				printf("Send error!\n");
@@ -245,9 +236,16 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 			}
 
 			printf("[others send to %s]:\n", username);
-			Str2int2(sendBuf[i],len);
-			
+			Str2int2(sendBuf[i], len);
 		}
+
+		//释放内存
+		if (sendCount != 0)
+		{
+			for (i = 0; i < sendCount; i++)
+				free(sendBuf[i]);
+		}
+		free(sendBuf);
 
 		/* 查看子进程对应的客户端是否有数据要发送 */
 		FD_ZERO(&rfd);
@@ -272,10 +270,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				close(*connect_fd);
 				return -3;
 			}
-			
 
-			
-			
 			frameType = getType(recvBuf);
 
 			if (frameType == SfhOnLine || frameType == SfhOffLine)
@@ -294,37 +289,33 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				 * 发来的文本信息帧 帧头4字节 [0]-0x12 [1]-0x0 [2:3]-帧长，信息开始表示发送方@张三 '\0' 之后是信息
 				 * 要发出去的文本信息帧
 				 *********************************/
-				 
-				 /* 解析文本信息帧，返回目标用户以及需要发送的文本 */
-				analysisSfhText(recvBuf,targetUsername,&text);
-				
+
+				/* 解析文本信息帧，返回目标用户以及需要发送的文本 */
+				analysisSfhText(recvBuf, targetUsername, &text);
+
 				/* 判断应答类型并发送应答帧 */
- 				if(JudgeExist(mysql,targetUsername)==0)//用户不存在
-					replyType=FriNotExist;
-				else if(JudgeOnline(mysql,targetUsername)==0)//用户不在线
-					replyType=FriOffLine;
+				if (JudgeExist(mysql, targetUsername) == 0) //用户不存在
+					replyType = FriNotExist;
+				else if (JudgeOnline(mysql, targetUsername) == 0) //用户不在线
+					replyType = FriOffLine;
 				else
-					replyType=Right;
-				CrtTextReplyFrame(replyType,&msg);
-				if(send(*connect_fd,msg,4,0)<0)
+					replyType = Right;
+				CrtTextReplyFrame(replyType, &msg);
+				if (send(*connect_fd, msg, 4, 0) < 0)
 				{
-					printf("server send textReply to %s error!\n",username);
+					printf("server send textReply to %s error!\n", username);
 					return -2;
-				}	
-				printf("server send textReply to %s successfully!\n",username); 
-				
-				
-				
-				
-				
+				}
+				printf("server send textReply to %s successfully!\n", username);
+
 				CrtTextFrame(username, text, &msg);
-				
-				uint16_t msglen=0;
-				printf("%s is going to send:",username);
-				msglen=getMsgLen(msg);
-				Str2int2(msg,msglen);
-				
-				if (strcmp(targetUsername,"all")==0)
+
+				uint16_t msglen = 0;
+				printf("%s is going to send:", username);
+				msglen = getMsgLen(msg);
+				Str2int2(msg, msglen);
+
+				if (strcmp(targetUsername, "all") == 0)
 				{
 					toAllUsers(mysql, username, msg);
 					WriteAllLog(username);
@@ -333,7 +324,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				{
 					SetMessageToDB(mysql, username, targetUsername, msg);
 					printf("[%s send data to %s]:\n", username, targetUsername);
-					Str2int2(msg,msglen);
+					Str2int2(msg, msglen);
 					WriteSendText(username, targetUsername, 0); //0是发送成功或失败的类型
 				}
 			}
@@ -425,7 +416,6 @@ int changeSecret(int *connect_fd, MYSQL *mysql, char username[])
 	return 0;
 }
 
-
 int sendOnlineFrame(MYSQL *mysql, char username[])
 {
 	/* 生成一个上线帧 */
@@ -453,7 +443,7 @@ int toAllUsers(MYSQL *mysql, char username[], char *msg)
 	int i = 0;
 
 	//获得所有在线用户
-	char *AllOnlineUser= NULL;
+	char *AllOnlineUser = NULL;
 	AllOnlineUser = GetAllOnlineUsers(mysql);
 
 	//获得当前在线用户的数量
@@ -480,13 +470,12 @@ int toAllUsers(MYSQL *mysql, char username[], char *msg)
 			if (AllOnlineUser[i] == '#')
 				break;
 
-				continue;
+			continue;
 		}
 
 		curUser[usernamelen] = AllOnlineUser[i];
 		usernamelen++;
 	}
-
 }
 
 /* 返回buf中第一个e的下标，isEnd返回是否已经到结尾 */
