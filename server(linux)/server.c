@@ -225,11 +225,15 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 		int i;
 		for (i = 0; i < sendCount; i++)
 		{
-			if (send(*connect_fd, sendBuf[i], BUFSIZE, 0) < 0)
+			uint16_t len=0;
+			memcpy(&len,&(sendBuf[i][2]),2);
+
+			if (send(*connect_fd, sendBuf[i], len, 0) < 0)
 			{
 				printf("Send error!\n");
 				return -2;
 			}
+
 			printf("[others send to %s]:%s\n", username, sendBuf[i]);
 			usleep(10);
 		}
@@ -272,7 +276,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 			}
 			else if (frameType == SfhText)
 			{
-				CrtTextFrame(username, recvBuf, &msg);
+				int msglen=CrtTextFrame(username, recvBuf, &msg);
 
 				isToALL = 0;
 				getTargetUsername(recvBuf, targetUsername, &isToALL);
@@ -285,7 +289,8 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				else
 				{
 					SetMessageToDB(mysql, username, targetUsername, msg);
-					printf("[%s send data to %s]:%s\n", username, targetUsername, recvBuf);
+					printf("[%s send data to %s]:\n", username, targetUsername);
+					Str2int2(msg,msglen);
 					WriteSendText(username, targetUsername, 0); //0是发送成功或失败的类型
 				}
 			}
@@ -380,9 +385,10 @@ int changeSecret(int *connect_fd, MYSQL *mysql, char username[])
 /* 如果是给所有用户的，则isToALL=1;否则通过targetUsername返回目标用户名 */
 int getTargetUsername(char buf[], char targetUsername[], int *isToALL)
 {
-	strcpy(targetUsername, buf + 4);
+	strcpy(targetUsername, buf + 5);
 	if (strcmp(targetUsername, "all") == 0)
 		*isToALL = 1;
+
 	return 0;
 }
 
@@ -438,8 +444,6 @@ int toAllUsers(MYSQL *mysql, char username[], char *msg)
 	char *AllOnlineUser= NULL;
 	AllOnlineUser = GetAllOnlineUsers(mysql);
 
-		printf("GetAllOnlineUser  end\n");
-
 	//获得当前在线用户的数量
 	int UserNum = 0;
 	char *curUser = (char *)malloc(sizeof(char) * 16); //用户名最长16个字节
@@ -463,13 +467,13 @@ int toAllUsers(MYSQL *mysql, char username[], char *msg)
 			usernamelen = 0;
 			if (AllOnlineUser[i] == '#')
 				break;
+
+				continue;
 		}
 
 		curUser[usernamelen] = AllOnlineUser[i];
 		usernamelen++;
 	}
-
-			printf("toAlluser end\n");
 
 }
 
