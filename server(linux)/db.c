@@ -578,110 +578,108 @@ int main(int argc, char *argv[])
 
     InitDatabase(&mysql);
 
-    /*******
-     * 
-     * char username1[16] = "MiaoMiaoYang";
-     * char username2[16] = "MiaoMiaoYan";
-     * char username3[16] = "MiaoMiaoYag";
-     * char username4[16] = "MiaoMiaoYng";
-     * char username5[16] = "MiaoMiaoang";
-     * char keyword1[12] = "123456";
-     * char keyword2[12] = "mkamskksa";
-     * 
-     * UpdateSecret(mysql, username1, keyword2);
-     * 
-     * printf("首次登陆-4:%d\n", JudgeUser(mysql, username1, keyword1));
-     * printf("密码错误-2:%d\n", JudgeUser(mysql, username1, keyword2));
-     * printf("用户消失-3:%d\n", JudgeUser(mysql, username2, keyword1));
-     * printf("正    确-1:%d\n", JudgeUser(mysql, username1, keyword1));
-     * 
-     * UpdateSecret(mysql,username1,keyword2);
-     * 
-     * AddOnlineUser(mysql, username1,1);
-     * AddOnlineUser(mysql, username2,2);
-     * AddOnlineUser(mysql, username3,3);
-     * AddOnlineUser(mysql, username4,4);
-     * AddOnlineUser(mysql, username5,5);
-     * 
-     * printf("%d\n",GetOnlineId(mysql,username1));
-     * printf("%s\n",GetOnlineUsername(mysql,2));
-     * 
-     * char *buf = GetAllUsers(mysql);
-     * if (buf != NULL)
-     * {
-     *     printf("%s\n", buf);
-     *     free(buf);
-     * }
-     * else
-     * {
-     *     printf("empty\n");
-     * }
-     * 
-     * 
-     * DelOnlineUser(mysql, username1);
-     * DelOnlineUser(mysql, username2);
-     * DelOnlineUser(mysql, username3);
-     * DelOnlineUser(mysql, username4);
-     * DelOnlineUser(mysql, username5);
-     * 
-     * buf = GetAllUsers(mysql);
-     * if (buf != NULL)
-     * {
-     *     printf("%s\n", buf);
-     *     free(buf);
-     * }
-*/
-
-    char from[] = "MiaoMiaoYang";
-    char to[] = "zhengxuanci";
-
-    char msg1[20] = "0000hhhhhhh1";
-    char msg2[20] = "0000hhhhhhh2";
-    char msg3[20] = "0000hhhhhhh3";
-    char msg4[20] = "0000hhhhhhh4";
-    char msg5[20] = "0000hhhhhhh5";
-
-    uint16_t num = 12;
-    memcpy(&(msg1[2]), &num, 2);
-    memcpy(&(msg2[2]), &num, 2);
-    memcpy(&(msg3[2]), &num, 2);
-    memcpy(&(msg4[2]), &num, 2);
-    memcpy(&(msg5[2]), &num, 2);
-
-    PackMsg(msg1, num);
-    PackMsg(msg2, num);
-    PackMsg(msg3, num);
-    PackMsg(msg4, num);
-    PackMsg(msg5, num);
-
-    SetMessageToDB(mysql, from, to, msg1);
-    SetMessageToDB(mysql, from, to, msg2);
-    SetMessageToDB(mysql, from, to, msg3);
-    SetMessageToDB(mysql, from, to, msg4);
-    SetMessageToDB(mysql, from, to, msg5);
-
-    printf("\n-------------------------\n第一次查询\n");
-
-    char **get = NULL;
-    int gnum = GetSendMessage(mysql, to, &get);
-    printf("num:%d\n", gnum);
-
-    int i = 0;
-    for (i = 0; i < gnum; i++)
+    // char username1[16] = "MiaoMiaoYang";
+    // char username2[16] = "MiaoMiaoYan";
+    // char username3[16] = "MiaoMiaoYag";
+    // char username4[16] = "MiaoMiaoYng";
+    // char username5[16] = "MiaoMiaoang";
+    // char keyword1[12] = "123456";
+    // char keyword2[12] = "mkamskksa";
+    
+    // UpdateSecret(mysql, username1, keyword2);
+    
+    // printf("首次登陆-4:%d\n", JudgeUser(mysql, username1, keyword1));
+    // printf("密码错误-2:%d\n", JudgeUser(mysql, username1, keyword2));
+    // printf("用户消失-3:%d\n", JudgeUser(mysql, username2, keyword1));
+    // printf("正    确-1:%d\n", JudgeUser(mysql, username1, keyword1));
+    
+    // UpdateSecret(mysql,username1,keyword2);
+    
+    // AddOnlineUser(mysql, username1,1);
+    // AddOnlineUser(mysql, username2,2);
+    // AddOnlineUser(mysql, username3,3);
+    // AddOnlineUser(mysql, username4,4);
+    // AddOnlineUser(mysql, username5,5);
+    
+    // printf("%d\n",GetOnlineId(mysql,username1));
+    // printf("%s\n",GetOnlineUsername(mysql,2));
+    
+    // char *buf = GetAllUsers(mysql);
+    // if (buf != NULL)
+    // {
+    //     printf("%s\n", buf);
+    //     free(buf);
+    // }
+    // else
+    // {
+    //     printf("empty\n");
+    // }
+    
+    
+    // DelOnlineUser(mysql, username1);
+    // DelOnlineUser(mysql, username2);
+    // DelOnlineUser(mysql, username3);
+    // DelOnlineUser(mysql, username4);
+    // DelOnlineUser(mysql, username5);
+    
+    char* buf;
+    buf = GetAllUsers(mysql);
+    if (buf != NULL)
     {
-        Str2int2(get[i], num);
+        printf("%s\n", buf);
+        free(buf);
     }
 
-    printf("\n-------------------------\n第2次查询\n");
-    get = NULL;
+    // char from[] = "MiaoMiaoYang";
+    // char to[] = "zhengxuanci";
 
-    gnum = GetSendMessage(mysql, to, &get);
-    printf("num:%d\n", gnum);
+    // char msg1[20] = "0000hhhhhhh1";
+    // char msg2[20] = "0000hhhhhhh2";
+    // char msg3[20] = "0000hhhhhhh3";
+    // char msg4[20] = "0000hhhhhhh4";
+    // char msg5[20] = "0000hhhhhhh5";
 
-    for (i = 0; i < gnum; i++)
-    {
-        Str2int2(get[i], num);
-    }
+    // uint16_t num = 12;
+    // memcpy(&(msg1[2]), &num, 2);
+    // memcpy(&(msg2[2]), &num, 2);
+    // memcpy(&(msg3[2]), &num, 2);
+    // memcpy(&(msg4[2]), &num, 2);
+    // memcpy(&(msg5[2]), &num, 2);
+
+    // PackMsg(msg1, num);
+    // PackMsg(msg2, num);
+    // PackMsg(msg3, num);
+    // PackMsg(msg4, num);
+    // PackMsg(msg5, num);
+
+    // SetMessageToDB(mysql, from, to, msg1);
+    // SetMessageToDB(mysql, from, to, msg2);
+    // SetMessageToDB(mysql, from, to, msg3);
+    // SetMessageToDB(mysql, from, to, msg4);
+    // SetMessageToDB(mysql, from, to, msg5);
+
+    // printf("\n-------------------------\n第一次查询\n");
+
+    // char **get = NULL;
+    // int gnum = GetSendMessage(mysql, to, &get);
+    // printf("num:%d\n", gnum);
+
+    // int i = 0;
+    // for (i = 0; i < gnum; i++)
+    // {
+    //     Str2int2(get[i], num);
+    // }
+
+    // printf("\n-------------------------\n第2次查询\n");
+    // get = NULL;
+
+    // gnum = GetSendMessage(mysql, to, &get);
+    // printf("num:%d\n", gnum);
+
+    // for (i = 0; i < gnum; i++)
+    // {
+    //     Str2int2(get[i], num);
+    // }
 
     /* 关闭整个连接 */
     mysql_close(mysql);
