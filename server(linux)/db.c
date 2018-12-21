@@ -638,10 +638,12 @@ void SetMessageToDB(MYSQL *_mysql, char *fromuser, char *touser, char *_msg)
     uint16_t len=0;
     memcpy(&len,&(_msg[2]),2);
 
-    char* msg=(char*)malloc(sizeof(char)*len);
+    char* msg=(char*)malloc(sizeof(char)*(len+1));
     memcpy(msg,_msg,len);
 
     PackMsg(msg,len);
+    msg[len]='\0';
+
 
     //生产查询语句的前半部分
     char sql[200];
@@ -920,3 +922,4 @@ int main(int argc, char *argv[])
 }
 
 #endif
+

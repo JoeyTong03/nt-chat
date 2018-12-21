@@ -407,29 +407,69 @@ int sendOnlineFrame(MYSQL *mysql, char username[])
 
 int toAllUsers(MYSQL *mysql, char username[], char *msg)
 {
-	char *p;
-	char *allUserText = NULL; //所有在线用户，格式：“@name1\0@name2\0....#”
-	char targetUsername[20];
-	int isEnd = 0;
-	int len = 0;
-	allUserText = GetAllOnlineUsers(mysql);
-	p = allUserText + 1; //避开第一个@
-	while (1)
+	// char *p;
+	// char *allUserText = NULL; //所有在线用户，格式：“@name1@name2....#”
+	// char targetUsername[20];
+	// int isEnd = 0;
+	// int len = 0;
+	// allUserText = GetAllOnlineUsers(mysql);
+	// p = allUserText + 1; //避开第一个@
+	// while (1)
+	// {
+	// 	len = myfind(p, '@', &isEnd);
+	// 	strncpy(targetUsername, p, len);
+	// 	p += (len + 1);
+	// 	if (strcmp(targetUsername, username) == 0)
+	// 		continue;
+	// 	SetMessageToDB(mysql, username, targetUsername, msg);
+	// 	if (isEnd == 1)
+	// 		break;
+	// 	printf("[%s send data to %s]:", username, targetUsername);
+	// 	uint16_t frameLen = getMsgLen(msg);
+	// 	Str2int2(msg, frameLen);
+	// 	printf("\n");
+	// }
+
+	int i = 0;
+
+	//获得所有在线用户
+	char *AllOnlineUser= NULL;
+	AllOnlineUser = GetAllOnlineUsers(mysql);
+
+	//获得当前在线用户的数量
+	int UserNum = 0;
+	char *curUser = (char *)malloc(sizeof(char) * 16); //用户名最长16个字节
+	int usernamelen = 0;
+	for (i = 0;; i++)
 	{
-		len = myfind(p, '@', &isEnd);
-		strncpy(targetUsername, p, len);
-		p += (len + 1);
-		if (strcmp(targetUsername, username) == 0)
+		if ((AllOnlineUser[i] == '@' || AllOnlineUser[i] == '#'))
+		{
+			//首次进入，直接跳过
+			if (usernamelen == 0)
+				continue;
+
+			/* 一个用户名识别完毕 */
+			curUser[usernamelen] = '\0'; //添加尾零
+			if (strcmp(username, curUser))
+			{
+				SetMessageToDB(mysql, username, curUser, msg);
+			}
+			else
+			{
+				//如果重名则跳过
+				continue;
+			}
+
+			usernamelen = 0;
+
+			if (AllOnlineUser[i] == '#')
+				break;
+
 			continue;
+		}
 
-		SetMessageToDB(mysql, username, targetUsername, msg);
-		if (isEnd == 1)
-			break;
-
-		printf("[%s send data to %s]:", username, targetUsername);
-		uint16_t frameLen = getMsgLen(msg);
-		Str2int2(msg, frameLen);
-		printf("\n");
+		curUser[usernamelen] = AllOnlineUser[i];
+		usernamelen++;
 	}
 }
 
