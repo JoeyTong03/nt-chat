@@ -401,19 +401,32 @@ int toAllUsers(MYSQL* mysql,char username[],char *msg)
 	char* p;
 	char *allUserText;//所有在线用户，格式：“@name1\0@name2\0....#”
 	char targetUsername[20];
-
+	int isEnd=0;
+	int len=0;
 	allUserText=GetAllUsers(mysql);
-	p=allUserText+1;
+	p=allUserText+1;//避开第一个@
 	while(1)
 	{
-		strcpy(targetUsername,p);
-		p+=(strlen(targetUsername)+2);
-		if(*p=='#')
-			break;
+		len=myfind(p,'@',&isEnd);
+		strncpy(targetUsername,p,len);
+		p+=(len+1);
 		if(strcmp(targetUsername,username)==0)
 			continue;
 		
 		SetMessageToDB(mysql,username,targetUsername,msg);
+		if(isEnd==1)
+			break;
+		
 		printf("[%s send data to %s]:%s\n",username,targetUsername,msg);
 	}
+}
+
+/* 返回buf中第一个e的下标，isEnd返回是否已经到结尾 */
+int myfind(char buf[],char e,int *isEnd)
+{
+	int i;
+	for(i=0;buf[i]!=e && buf[i]!='#';i++);
+	if(buf[i]=='#')
+		*isEnd=1;
+	return i;
 }
