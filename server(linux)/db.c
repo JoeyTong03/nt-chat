@@ -378,7 +378,7 @@ void UnpackMsg(char *_msg, int _len)
 }
 
 //返回当前所有在线用户
-char *GetAllUsers(MYSQL *_mysql)
+char* GetAllUsers(MYSQL *_mysql)
 {
     MYSQL_RES *result;
     MYSQL_ROW row;
@@ -417,14 +417,14 @@ char *GetAllUsers(MYSQL *_mysql)
         {
             size = strlen(row[0]) + 3;
             buf = (char *)malloc(size * sizeof(char));
-            sprintf(buf, "@%s\0", row[0]);
+            sprintf(buf, "@%s", row[0]);
         }
         else
         {
             char *tmpbuf = NULL;
             size += strlen(row[0]) + 3;
             tmpbuf = (char *)malloc(size * sizeof(char));
-            sprintf(tmpbuf, "%s@%s\0", buf, row[0]);
+            sprintf(tmpbuf, "%s@%s", buf, row[0]);
             free(buf);
             buf = tmpbuf;
         }
