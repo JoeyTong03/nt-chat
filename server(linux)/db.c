@@ -554,7 +554,7 @@ void SetMessageToDB(MYSQL *_mysql, char *fromuser, char *touser, char *msg)
     }
 };
 
-#define TESTDB
+//#define TESTDB
 #ifdef TESTDB
 
 void Str2int2(char *buf, int length)
