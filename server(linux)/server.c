@@ -191,13 +191,9 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 //	Str2int2(friInitFrame, friInitFrame_length);
 //	printf("\n\n");
 
-	printf("send online frame begin \n");
-
 	/* 给其他用户发送该用户的上线帧 */
 	sendOnlineFrame(mysql, username);
 
-
-	printf("init Login end\n");
 	return 0;
 }
 
@@ -225,8 +221,6 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 	{
 		/* 查看是否有数据需要发送给该子进程对应的客户端 */
 		sendCount = GetSendMessage(mysql, username, &sendBuf);
-
-		printf("user: %s sendcount: %d",username,sendCount);
 
 		int i;
 		for (i = 0; i < sendCount; i++)
@@ -404,6 +398,7 @@ int sendOnlineFrame(MYSQL *mysql, char username[])
 	// printf("\n");
 
 	/* 将上线帧发送给所有用户 */
+
 	toAllUsers(mysql, username, onlineFrame);
 
 	free(onlineFrame);
@@ -443,6 +438,8 @@ int toAllUsers(MYSQL *mysql, char username[], char *msg)
 	char *AllOnlineUser= NULL;
 	AllOnlineUser = GetAllOnlineUsers(mysql);
 
+		printf("GetAllOnlineUser  end\n");
+
 	//获得当前在线用户的数量
 	int UserNum = 0;
 	char *curUser = (char *)malloc(sizeof(char) * 16); //用户名最长16个字节
@@ -459,25 +456,21 @@ int toAllUsers(MYSQL *mysql, char username[], char *msg)
 			curUser[usernamelen] = '\0'; //添加尾零
 			if (strcmp(username, curUser))
 			{
+				//自己不发给自己
 				SetMessageToDB(mysql, username, curUser, msg);
-			}
-			else
-			{
-				//如果重名则跳过
-				continue;
 			}
 
 			usernamelen = 0;
-
 			if (AllOnlineUser[i] == '#')
 				break;
-
-			continue;
 		}
 
 		curUser[usernamelen] = AllOnlineUser[i];
 		usernamelen++;
 	}
+
+			printf("toAlluser end\n");
+
 }
 
 /* 返回buf中第一个e的下标，isEnd返回是否已经到结尾 */
