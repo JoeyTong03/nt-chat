@@ -234,7 +234,8 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				return -2;
 			}
 
-			printf("[others send to %s]:%s\n", username, sendBuf[i]);
+			printf("[others send to %s]:\n", username);
+			Str2int2(sendBuf[i],len);
 			usleep(10);
 		}
 
@@ -276,7 +277,13 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 			}
 			else if (frameType == SfhText)
 			{
+				/*********************************
+				 * 发来的文本信息帧 帧头4字节 [0]-0x12 [1]-0x0 [2:3]-帧长，信息开始表示发送方@张三 '\0' 之后是信息
+				 * 要发出去的文本信息帧
+				 *********************************/
+
 				int msglen=CrtTextFrame(username, recvBuf, &msg);
+				printf("msglen:%d\n",msglen);
 
 				isToALL = 0;
 				getTargetUsername(recvBuf, targetUsername, &isToALL);

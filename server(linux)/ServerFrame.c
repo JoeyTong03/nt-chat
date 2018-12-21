@@ -218,7 +218,7 @@ int CrtOnLineFrame(char username[], char **frOnline)
 	uint16_t length = 32;
 	*frOnline = (char *)malloc(length * sizeof(char));
 	memset(*frOnline, 0, length);
-	(*frOnline)[0] = (char)0x77;
+	(*frOnline)[0] = (char)0x75;
 	memcpy((*frOnline) + 2, &length, 2);
 	memcpy((*frOnline) + 4, username, 16);
 	return 32;
