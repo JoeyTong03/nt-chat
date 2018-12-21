@@ -220,8 +220,13 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 	int replyType = Right;
 	while (1)
 	{
+		usleep(30000);
+
 		/* 查看是否有数据需要发送给该子进程对应的客户端 */
 		sendCount = GetSendMessage(mysql, username, &sendBuf);
+
+//		printf("user:%s sendcount:%d\n",username,sendCount);
+
 
 		int i;
 		for (i = 0; i < sendCount; i++)
@@ -280,7 +285,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				{
 					printf("User %s offline!\n", username);
 					DelOnlineUser(mysql, username);
-					WriteOfflinelog(username);
+					//WriteOfflinelog(username);
 				}
 			}
 			else if (frameType == SfhText)
@@ -318,14 +323,14 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				if (strcmp(targetUsername, "all") == 0)
 				{
 					toAllUsers(mysql, username, msg);
-					WriteAllLog(username);
+					//WriteAllLog(username);
 				}
 				else
 				{
 					SetMessageToDB(mysql, username, targetUsername, msg);
 					printf("[%s send data to %s]:\n", username, targetUsername);
 					Str2int2(msg, msglen);
-					WriteSendText(username, targetUsername, 0); //0是发送成功或失败的类型
+					//WriteSendText(username, targetUsername, 0); //0是发送成功或失败的类型
 				}
 			}
 		}
