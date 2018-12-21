@@ -389,7 +389,10 @@ int sendOnlineFrame(MYSQL* mysql,char username[])
 	char *onlineFrame;
 	int onlineFrame_length;
 	onlineFrame_length = CrtOnLineFrame(username, &onlineFrame); //函数内部申请空间
-	printf("The online-frame is %s\n",onlineFrame);
+	
+	printf("The online-frame is ");
+	Str2int2(onlineFrame,onlineFrame_length);
+	printf("\n");
 	
 	/* 将上线帧发送给所有用户 */	
 	toAllUsers(mysql,username,onlineFrame);
@@ -403,7 +406,7 @@ int toAllUsers(MYSQL* mysql,char username[],char *msg)
 	char targetUsername[20];
 	int isEnd=0;
 	int len=0;
-	allUserText=GetAllUsers(mysql);
+	allUserText=GetOnlineUsers(mysql);
 	p=allUserText+1;//避开第一个@
 	while(1)
 	{
@@ -416,8 +419,11 @@ int toAllUsers(MYSQL* mysql,char username[],char *msg)
 		SetMessageToDB(mysql,username,targetUsername,msg);
 		if(isEnd==1)
 			break;
-		
-		printf("[%s send data to %s]:%s\n",username,targetUsername,msg);
+	
+		printf("[%s send data to %s]:",username,targetUsername);
+		uint16_t frameLen=getMsgLen(msg);
+		Str2int2(msg,frameLen);
+		printf("\n");
 	}
 }
 
@@ -429,4 +435,12 @@ int myfind(char buf[],char e,int *isEnd)
 	if(buf[i]=='#')
 		*isEnd=1;
 	return i;
+}
+
+uint16_t getMsgLen(char *msg)
+{
+	uint16_t len;
+	char lenStr[2];
+	memcpy(&len,msg+2,2);
+	return len;
 }

@@ -78,4 +78,5 @@ int toAllUsers(MYSQL* mysql,char username[],char *msg);
 /* 返回buf中第一个e的下标，isEnd返回是否已经到结尾 */
 int myfind(char buf[],char e,int *isEnd);
 
+uint16_t getMsgLen(char *msg);
 #endif
