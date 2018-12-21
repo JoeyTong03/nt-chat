@@ -20,3 +20,6 @@ clean:
 	rm -rf $(TARGET)
 
 #gcc db.c -o db  -I/usr/include/mysql -L/usr/lib64/mysql -lmysqlclient
+#gcc db.c -o getcmsg  -I/usr/include/mysql -L/usr/lib64/mysql -lmysqlclient
+
+

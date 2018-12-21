@@ -1,4 +1,6 @@
+
 #include "server.h"
+#include <stdint.h>
 
 /* 等待子进程结束，避免出现僵尸进程 */
 void wait4children(int sig)
@@ -137,111 +139,117 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 
 	/* 发送应答帧 */
 	initReplyFrame(replyType, &sendBuf);
-	FD_SET(*connect_fd, &wfd);
-	if (select(maxfd + 1, NULL, &wfd, NULL, NULL) > 0) //有可写的数据
+	// FD_SET(*connect_fd, &wfd);
+	// if (select(maxfd + 1, NULL, &wfd, NULL, NULL) > 0) //有可写的数据
+	// {
+	if (send(*connect_fd, sendBuf, LEN32, 0) < 0)
 	{
-		if (send(*connect_fd, sendBuf, LEN32, 0) < 0)
-		{
-			printf("Send reply error!\n");
-			close(*connect_fd);
-			return -3;
-		}
+		printf("Send reply error!\n");
+		close(*connect_fd);
+		return -3;
 	}
+	// }
 
-		/* 更新在线用户 */
+	/* 更新在线用户 */
 	AddOnlineUser(mysql, username, client_num);
+	printf("user:%s finish - addonlineuser\n", username);
 
 	/* 将登陆信息写入日志，包括成功/失败 */
-	WriteReglog(username,replyType);
-	
+	//WriteReglog(username, replyType);
+	printf("user:%s finish - writelog\n", username);
+
 	/* 如果需要修改密码，等待客户端发送SfhChangeSecret帧，并获取其中的密码，更新数据库 */
 	if (replyType == NeedUpdateSecret)
 	{
 		printf("Change keyword begin\n");
 		if (changeSecret(connect_fd, mysql, username) < 0)
 			return -4;
-		WriteChgPswdlog(username);		
+		WriteChgPswdlog(username);
 		printf("Change keyword end\n");
 	}
-		
 
+	printf("user:%s finish - updatekeyword\n", username);
 
 	/* 给该客户端发送好友初始化帧 */
 	char *nameList = GetAllUsers(mysql);
+	printf("user:%s finish - getalluser\n", username);
+
 	char *friInitFrame;
 	int friInitFrame_length;
 	friInitFrame_length = CrtFriInit(nameList, &friInitFrame);
+	printf("user:%s finish - crtfriInit\n", username);
+
 	if (send(*connect_fd, friInitFrame, friInitFrame_length, 0) < 0)
 	{
 		printf("Send friInitFrame error!\n");
 		close(*connect_fd);
 		return -5;
 	}
+	printf("user:%s finish - send friend init frame\n", username);
 
-	Str2int2("user:%s - nameList:\n%s\n",username,nameList);
+	printf("user:%s - len:%d - nameList:\n", username, friInitFrame_length);
+	Str2int2(friInitFrame, friInitFrame_length);
+	printf("\n\n");
 
 	/* 给其他用户发送该用户的上线帧 */
-	sendOnlineFrame(mysql,username);
-	
+	sendOnlineFrame(mysql, username);
+
+	while (1)
+		sleep(1);
+
 	return 0;
 }
 
 /* 向其他用户发送上线帧后进入聊天状态 */
 int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 {
-	
+
 	printf("Begin communication!\n");
-	
-	int sendCount=0;//需要发送给子进程对应客户端的数据帧数量
-	char **sendBuf;//需要发送给子进程对应客户端的数据帧(二维数组)
-	char recvBuf[BUFSIZE];//从子进程对应客户端收到的数据帧
-	
+
+	int sendCount = 0;	 //需要发送给子进程对应客户端的数据帧数量
+	char **sendBuf;		   //需要发送给子进程对应客户端的数据帧(二维数组)
+	char recvBuf[BUFSIZE]; //从子进程对应客户端收到的数据帧
+
 	fd_set rfd;
-	int maxfd ;
+	int maxfd;
 	struct timeval tv;
 	int ret;
-	
-	
-	char targetUsername[20];
-	int isToALL=0;//是否是发给所有用户
-	char *msg;//子进程对应的客户端准备发送的数据帧
-	int frameType=0;//从子进程对应的客户端收到的帧的类型
-	
-	
-	
-	
 
-	while(1)
+	char targetUsername[20];
+	int isToALL = 0;   //是否是发给所有用户
+	char *msg;		   //子进程对应的客户端准备发送的数据帧
+	int frameType = 0; //从子进程对应的客户端收到的帧的类型
+
+	while (1)
 	{
 		/* 查看是否有数据需要发送给该子进程对应的客户端 */
-		sendCount=GetSendMessage(mysql,username,&sendBuf);
-		
+		sendCount = GetSendMessage(mysql, username, &sendBuf);
+
 		int i;
-		for(i=0;i<sendCount;i++)
+		for (i = 0; i < sendCount; i++)
 		{
-			if(send(*connect_fd,sendBuf[i],BUFSIZE,0)<0)
+			if (send(*connect_fd, sendBuf[i], BUFSIZE, 0) < 0)
 			{
 				printf("Send error!\n");
 				return -2;
 			}
-			printf("[others send to %s]:%s\n",username,sendBuf[i]);
+			printf("[others send to %s]:%s\n", username, sendBuf[i]);
 			usleep(10);
-		}		
-		
-		
+		}
+
 		/* 查看子进程对应的客户端是否有数据要发送 */
 		FD_ZERO(&rfd);
-        tv.tv_sec = 0;
-        tv.tv_usec = 300;
+		tv.tv_sec = 0;
+		tv.tv_usec = 300;
 		maxfd = *connect_fd;
 		FD_SET(*connect_fd, &rfd);
-		ret = select(maxfd+1,&rfd,NULL,NULL,&tv);
-		if(ret<0)
+		ret = select(maxfd + 1, &rfd, NULL, NULL, &tv);
+		if (ret < 0)
 		{
 			printf("select error!\n");
 			break;
 		}
-		else if(ret==0)
+		else if (ret == 0)
 			continue;
 		else
 		{
@@ -252,45 +260,41 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				close(*connect_fd);
 				return -3;
 			}
-			
-			
-			
-			frameType=getType(recvBuf);
 
-			if(frameType==SfhOnLine || frameType==SfhOffLine)
+			frameType = getType(recvBuf);
+
+			if (frameType == SfhOnLine || frameType == SfhOffLine)
 			{
-				toAllUsers(mysql,username,recvBuf);
-				if(frameType==SfhOffLine)
+				toAllUsers(mysql, username, recvBuf);
+				if (frameType == SfhOffLine)
 				{
-					printf("User %s offline!\n",username);
-					DelOnlineUser(mysql,username);
+					printf("User %s offline!\n", username);
+					DelOnlineUser(mysql, username);
 					WriteOfflinelog(username);
 				}
-				
 			}
-			else if(frameType==SfhText)
+			else if (frameType == SfhText)
 			{
-				CrtTextFrame(username,recvBuf,&msg);
-					
-				isToALL=0;
-				getTargetUsername(recvBuf,targetUsername,&isToALL);
-				
-				if(isToALL)
+				CrtTextFrame(username, recvBuf, &msg);
+
+				isToALL = 0;
+				getTargetUsername(recvBuf, targetUsername, &isToALL);
+
+				if (isToALL)
 				{
-					toAllUsers(mysql,username,msg);
+					toAllUsers(mysql, username, msg);
 					WriteAllLog(username);
 				}
 				else
-				{	
-					SetMessageToDB(mysql,username,targetUsername,msg);
-					printf("[%s send data to %s]:%s\n",username,targetUsername,recvBuf);
-					WriteSendText(username,targetUsername,0);//0是发送成功或失败的类型
+				{
+					SetMessageToDB(mysql, username, targetUsername, msg);
+					printf("[%s send data to %s]:%s\n", username, targetUsername, recvBuf);
+					WriteSendText(username, targetUsername, 0); //0是发送成功或失败的类型
 				}
 			}
 		}
-		
 	}
-	
+
 	return 0;
 }
 
@@ -331,7 +335,7 @@ int identify(MYSQL *mysql, char buf[], char username[], int client_num)
 		printf("Need update secret!\n");
 		return -5;
 	}
-	
+
 	return 0;
 }
 
@@ -377,65 +381,66 @@ int changeSecret(int *connect_fd, MYSQL *mysql, char username[])
 }
 
 /* 如果是给所有用户的，则isToALL=1;否则通过targetUsername返回目标用户名 */
-int getTargetUsername(char buf[],char targetUsername[],int *isToALL)
+int getTargetUsername(char buf[], char targetUsername[], int *isToALL)
 {
-	strcpy(targetUsername,buf+4);
-	if(strcmp(targetUsername,"all")==0)
-		*isToALL=1;
+	strcpy(targetUsername, buf + 4);
+	if (strcmp(targetUsername, "all") == 0)
+		*isToALL = 1;
 	return 0;
 }
 
-int sendOnlineFrame(MYSQL* mysql,char username[])
+int sendOnlineFrame(MYSQL *mysql, char username[])
 {
 	/* 生成一个上线帧 */
 	char *onlineFrame;
 	int onlineFrame_length;
 	onlineFrame_length = CrtOnLineFrame(username, &onlineFrame); //函数内部申请空间
-	
+
 	printf("The online-frame is ");
-	Str2int2(onlineFrame,onlineFrame_length);
+	Str2int2(onlineFrame, onlineFrame_length);
 	printf("\n");
-	
-	/* 将上线帧发送给所有用户 */	
-	toAllUsers(mysql,username,onlineFrame);
+
+	/* 将上线帧发送给所有用户 */
+	toAllUsers(mysql, username, onlineFrame);
 	return 0;
 }
 
-int toAllUsers(MYSQL* mysql,char username[],char *msg)
+int toAllUsers(MYSQL *mysql, char username[], char *msg)
 {
-	char* p;
-	char *allUserText=NULL;//所有在线用户，格式：“@name1\0@name2\0....#”
+	char *p;
+	char *allUserText = NULL; //所有在线用户，格式：“@name1\0@name2\0....#”
 	char targetUsername[20];
-	int isEnd=0;
-	int len=0;
-	allUserText=GetAllOnlineUsers(mysql);
-	p=allUserText+1;//避开第一个@
-	while(1)
+	int isEnd = 0;
+	int len = 0;
+	allUserText = GetAllOnlineUsers(mysql);
+	p = allUserText + 1; //避开第一个@
+	while (1)
 	{
-		len=myfind(p,'@',&isEnd);
-		strncpy(targetUsername,p,len);
-		p+=(len+1);
-		if(strcmp(targetUsername,username)==0)
+		len = myfind(p, '@', &isEnd);
+		strncpy(targetUsername, p, len);
+		p += (len + 1);
+		if (strcmp(targetUsername, username) == 0)
 			continue;
-		
-		SetMessageToDB(mysql,username,targetUsername,msg);
-		if(isEnd==1)
+
+		SetMessageToDB(mysql, username, targetUsername, msg);
+		if (isEnd == 1)
 			break;
-	
-		printf("[%s send data to %s]:",username,targetUsername);
-		uint16_t frameLen=getMsgLen(msg);
-		Str2int2(msg,frameLen);
+
+		printf("[%s send data to %s]:", username, targetUsername);
+		uint16_t frameLen = getMsgLen(msg);
+		Str2int2(msg, frameLen);
 		printf("\n");
 	}
 }
 
 /* 返回buf中第一个e的下标，isEnd返回是否已经到结尾 */
-int myfind(char buf[],char e,int *isEnd)
+int myfind(char buf[], char e, int *isEnd)
 {
 	int i;
-	for(i=0;buf[i]!=e && buf[i]!='#';i++);
-	if(buf[i]=='#')
-		*isEnd=1;
+	for (i = 0; buf[i] != e && buf[i] != '#'; i++)
+		;
+	if (buf[i] == '#')
+		*isEnd = 1;
 	return i;
 }
 
@@ -443,6 +448,6 @@ uint16_t getMsgLen(char *msg)
 {
 	uint16_t len;
 	char lenStr[2];
-	memcpy(&len,msg+2,2);
+	memcpy(&len, msg + 2, 2);
 	return len;
 }

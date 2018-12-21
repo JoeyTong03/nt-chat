@@ -1,11 +1,11 @@
-#include"ServerFrame.h"
+#include "ServerFrame.h"
 
-void Str2int2(char*buf, int length)
+void Str2int2(char *buf, int length)
 {
 	int i;
-	for (i = 0; i<length; i++)
+	for (i = 0; i < length; i++)
 	{
-		if ((buf[i] >= 'a'&&buf[i] <= 'z') || (buf[i] >= 'A' && buf[i] <= 'Z') || (buf[i] >= '0'&&buf[i] <= '9')||(buf[i]=='@'))
+		if ((buf[i] >= 'a' && buf[i] <= 'z') || (buf[i] >= 'A' && buf[i] <= 'Z') || (buf[i] >= '0' && buf[i] <= '9') || (buf[i] == '@'))
 			printf("%c ", buf[i]);
 		else
 			printf("%x ", (int)buf[i]);
@@ -64,7 +64,7 @@ int analysisSfhChangeSecret(char buf[], char newSecret[])
 返 回 值：name是返回的目标用户
 说    明：在函数外将定义文本信息的指针，并用一个二级指针指向该指针，作为输入的参数
 ***************************************************************************/
-int analysisSfhText(char buf[], char name[], char**Text)
+int analysisSfhText(char buf[], char name[], char **Text)
 {
 	//name = (char*)malloc(16 * sizeof(char));
 	memset(name, 0, 16);
@@ -72,7 +72,7 @@ int analysisSfhText(char buf[], char name[], char**Text)
 	uint16_t TxtLength;
 	memcpy(&TxtLength, buf + 2, 2);
 	TxtLength -= (strlen(name) + 6);
-	*Text = (char*)malloc(TxtLength * sizeof(char));
+	*Text = (char *)malloc(TxtLength * sizeof(char));
 	memset(*Text, 0, TxtLength);
 	strcpy(*Text, buf + 6 + strlen(name));
 	return 1;
@@ -86,9 +86,9 @@ int analysisSfhText(char buf[], char name[], char**Text)
 返 回 值：帧的长度
 说    明：
 ***************************************************************************/
-int initReplyFrame(int ReplyType, char**ReplyFrame)
+int initReplyFrame(int ReplyType, char **ReplyFrame)
 {
-	*ReplyFrame = (char*)malloc(4 * sizeof(char));
+	*ReplyFrame = (char *)malloc(4 * sizeof(char));
 	memset(*ReplyFrame, 0, 4);
 	(*ReplyFrame)[0] = (char)0x71;
 	(*ReplyFrame)[1] = (char)ReplyType;
@@ -103,9 +103,9 @@ int initReplyFrame(int ReplyType, char**ReplyFrame)
 返 回 值：帧的长度
 说    明：
 ***************************************************************************/
-int CrtTextReplyFrame(int ReplyType, char**TextReplyFrame)
+int CrtTextReplyFrame(int ReplyType, char **TextReplyFrame)
 {
-	*TextReplyFrame = (char*)malloc(4 * sizeof(char));
+	*TextReplyFrame = (char *)malloc(4 * sizeof(char));
 	memset(*TextReplyFrame, 0, 4);
 	(*TextReplyFrame)[0] = (char)0x72;
 	(*TextReplyFrame)[1] = (char)ReplyType;
@@ -120,10 +120,10 @@ int CrtTextReplyFrame(int ReplyType, char**TextReplyFrame)
 返 回 值：帧的长度
 说    明：
 ***************************************************************************/
-int CrtTextFrame(char*name, char*text, char**TextFrame)
+int CrtTextFrame(char *name, char *text, char **TextFrame)
 {
 	uint16_t FrameLength = (uint16_t)strlen(name) + strlen(text) + 7;
-	*TextFrame = (char*)malloc(FrameLength * sizeof(char));
+	*TextFrame = (char *)malloc(FrameLength * sizeof(char));
 	memset(*TextFrame, 0, FrameLength);
 	(*TextFrame)[0] = (char)0x77;
 	memcpy((*TextFrame) + 2, &FrameLength, 2);
@@ -139,9 +139,9 @@ int CrtTextFrame(char*name, char*text, char**TextFrame)
 返 回 值：帧的长度
 说    明：
 ***************************************************************************/
-int CrtOffLineFrame(char**OffLineFrame)
+int CrtOffLineFrame(char **OffLineFrame)
 {
-	*OffLineFrame = (char*)malloc(4 * sizeof(char));
+	*OffLineFrame = (char *)malloc(4 * sizeof(char));
 	memset(*OffLineFrame, 0, 4);
 	*OffLineFrame[0] = (char)0x73;
 	uint16_t length = 4;
@@ -155,16 +155,17 @@ int CrtOffLineFrame(char**OffLineFrame)
 返 回 值：帧的长度
 说    明：
 ***************************************************************************/
-int CrtOnOffFrame(char*name, int OnorOff, char**OnOffFrame)
+int CrtOnOffFrame(char *name, int OnorOff, char **OnOffFrame)
 {
 	uint16_t length = 32;
-	*OnOffFrame = (char*)malloc(length * sizeof(char));
+	*OnOffFrame = (char *)malloc(length * sizeof(char));
 	memset(*OnOffFrame, 0, 32);
 	(*OnOffFrame)[0] = (char)0x75;
 	memcpy((*OnOffFrame) + 2, &length, 2);
 	memcpy((*OnOffFrame) + 4, name, strlen(name));
 	return 32;
 }
+
 /***************************************************************************
 函数名称：CrtFriInit
 功    能：生成好友初始化帧
@@ -172,24 +173,36 @@ int CrtOnOffFrame(char*name, int OnorOff, char**OnOffFrame)
 返 回 值：帧的长度
 说    明：
 ***************************************************************************/
-int CrtFriInit(char* NameList, char**FriInitFrame)
+int CrtFriInit(char *NameList, char **FriInitFrame)
 {
 	uint8_t FriNum = 0;
 	uint16_t length = 0;
-	for (; NameList[length] == '@';)
-	{
-		length++;
-		for (; NameList[length] != '\0'; length++)
-			;
-		length++;
-		FriNum++;
-	}
-	length += 5;
-	*FriInitFrame = (char*)malloc(length * sizeof(char));
+
+	//数当前有多少用户
+	for (; NameList[length] != '#'; length++)
+		if (NameList[length] == '@')
+		{
+			//当前有一个用户
+			FriNum++;
+		}
+	length+=4; //帧头4字节+当前字符的长度(没有‘#’)
+
+	// for (; NameList[length] == '@';)
+	// {
+	// 	length++;
+	// 	for (; NameList[length] != '\0'; length++)
+	// 		;
+	// 	length++;
+	// 	FriNum++;
+	// }
+	// length += 5;
+
+	*FriInitFrame = (char *)malloc(length * sizeof(char));
 	memset(*FriInitFrame, 0, length);
 	(*FriInitFrame)[0] = (char)0x76;
 	memcpy((*FriInitFrame) + 1, &FriNum, 1);
 	memcpy((*FriInitFrame) + 2, &length, 2);
+
 	memcpy((*FriInitFrame) + 4, NameList, length - 4);
 	return (int)(length);
 }
@@ -200,10 +213,10 @@ int CrtFriInit(char* NameList, char**FriInitFrame)
 返 回 值：帧的长度
 说    明：
 ***************************************************************************/
-int CrtOnLineFrame(char username[], char**frOnline)
+int CrtOnLineFrame(char username[], char **frOnline)
 {
 	uint16_t length = 32;
-	*frOnline = (char*)malloc(length * sizeof(char));
+	*frOnline = (char *)malloc(length * sizeof(char));
 	memset(*frOnline, 0, length);
 	(*frOnline)[0] = (char)0x77;
 	memcpy((*frOnline) + 2, &length, 2);

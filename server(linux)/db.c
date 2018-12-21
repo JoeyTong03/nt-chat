@@ -377,8 +377,16 @@ void UnpackMsg(char *_msg, int _len)
             (_msg)[i] = 0;
 }
 
-//返回当前所有在线用户
-char* GetAllOnlineUsers(MYSQL *_mysql)
+/***************************************************************************
+ * 函数名称：GetAllUsers
+ * 功    能：得到所有的在线用户
+ * 输入参数：
+ * 返 回 值：char*
+ * 说    明：如果当前数据库中在线用户有：MiaoMiaoYang tongjiayan
+ *          返回值为 @tongjiayan@MiaoMiaoYang#
+ *          每一个用户以@开头，结束时以#结尾 
+ ***************************************************************************/
+char *GetAllOnlineUsers(MYSQL *_mysql)
 {
     MYSQL_RES *result;
     MYSQL_ROW row;
@@ -389,8 +397,7 @@ char* GetAllOnlineUsers(MYSQL *_mysql)
     char sql[200];
     sprintf(
         sql,
-        "select * from onlineuser;"
-    );
+        "select * from onlineuser;");
 
     if (mysql_query(_mysql, sql))
     {
@@ -431,7 +438,7 @@ char* GetAllOnlineUsers(MYSQL *_mysql)
         }
     }
 
-    size++;//size 多加一个#
+    size++; //size 多加一个#
     char *final = (char *)malloc(sizeof(char) * (size));
     sprintf(final, "%s#", buf);
     free(buf);
@@ -442,8 +449,16 @@ char* GetAllOnlineUsers(MYSQL *_mysql)
     return final;
 }
 
-//返回当前所有用户
-char* GetAllUsers(MYSQL *_mysql)
+/***************************************************************************
+ * 函数名称：GetAllUsers
+ * 功    能：得到所有的用户
+ * 输入参数：
+ * 返 回 值：char*
+ * 说    明：如果当前数据库中用户有：MiaoMiaoYang tongjiayan zhengxuanci
+ *          返回值为 @MiaoMiaoYang1@tongjiayan1@zhengxuanci0#
+ *          每一个用户以@开头，最后的数字为1表示当前在线，为0表示当前不在线，结束时以#结尾 
+ ***************************************************************************/
+char *GetAllUsers(MYSQL *_mysql)
 {
     MYSQL_RES *result;
     MYSQL_ROW row;
@@ -454,8 +469,7 @@ char* GetAllUsers(MYSQL *_mysql)
     char sql[200];
     sprintf(
         sql,
-        "select user.username, (select count(onlineuser.username) from onlineuser where onlineuser.username=user.username) count from user;"
-    );
+        "select user.username, (select count(onlineuser.username) from onlineuser where onlineuser.username=user.username) count from user;");
     /***********************************
      * 返回的结果说明：
      * username:
@@ -500,14 +514,14 @@ char* GetAllUsers(MYSQL *_mysql)
         {
             size = strlen(row[0]) + 3;
             buf = (char *)malloc(size * sizeof(char));
-            sprintf(buf, "@%s%s", row[0],row[1]);
+            sprintf(buf, "@%s%s", row[0], row[1]);
         }
         else
         {
             char *tmpbuf = NULL;
             size += strlen(row[0]) + 3;
             tmpbuf = (char *)malloc(size * sizeof(char));
-            sprintf(tmpbuf, "%s@%s%s", buf, row[0],row[1]);
+            sprintf(tmpbuf, "%s@%s%s", buf, row[0], row[1]);
             free(buf);
             buf = tmpbuf;
         }
@@ -615,11 +629,19 @@ int GetSendMessage(MYSQL *_mysql, char *_username, char ***_return)
 }
 
 //服务端子进程向其他子进程发送包装好的帧
-void SetMessageToDB(MYSQL *_mysql, char *fromuser, char *touser, char *msg)
+void SetMessageToDB(MYSQL *_mysql, char *fromuser, char *touser, char *_msg)
 {
     /* 进行查询，成功返回0，不成功非0
     1、查询字符串存在语法错误
     2、查询不存在的数据表 */
+
+    uint16_t len=0;
+    memcpy(&len,&(_msg[2]),2);
+
+    char* msg=(char*)malloc(sizeof(char)*len);
+    memcpy(msg,_msg,len);
+
+    PackMsg(msg,len);
 
     //生产查询语句的前半部分
     char sql[200];
@@ -640,6 +662,9 @@ void SetMessageToDB(MYSQL *_mysql, char *fromuser, char *touser, char *msg)
 //#define TESTDB
 #ifdef TESTDB
 
+#include <unistd.h>
+#include <stdio.h>
+
 void Str2int2(char *buf, int length)
 {
     int i;
@@ -655,57 +680,105 @@ void Str2int2(char *buf, int length)
     printf("%c", '\n');
 }
 
-int main(int argc, char *argv[])
+//测试多个子进程能不能同时对数据库读写
+void test1()
 {
+    int i = 0;
+    for (i = 0; i < 10; i++)
+    {
+        pid_t fpid = fork();
+        if (fpid == 0)
+        {
+            MYSQL *mysql;
+
+            InitDatabase(&mysql);
+
+            char username1[16] = "MiaoMiaoYang";
+            sprintf(username1, "%s%d", username1, i);
+            AddOnlineUser(mysql, username1, i);
+
+            //子进程
+            while (1)
+            {
+                char *buf = GetAllOnlineUsers(mysql);
+                if (buf != NULL)
+                {
+                    printf("fork:%d - %s\n", i, buf);
+                    free(buf);
+                }
+                else
+                {
+                    printf("empty\n");
+                }
+
+                sleep(1);
+            }
+
+            mysql_close(mysql);
+        }
+        else if (fpid < 0)
+        {
+            printf("%d fork()失败", i);
+        }
+    }
+
+    printf("父进程结束");
+    while (1)
+    {
+        sleep(1);
+    }
+}
+
+void test2()
+{
+
     MYSQL *mysql;
 
     InitDatabase(&mysql);
 
-    // char username1[16] = "MiaoMiaoYang";
-    // char username2[16] = "MiaoMiaoYan";
-    // char username3[16] = "MiaoMiaoYag";
-    // char username4[16] = "MiaoMiaoYng";
-    // char username5[16] = "MiaoMiaoang";
-    // char keyword1[12] = "123456";
-    // char keyword2[12] = "mkamskksa";
-    
-    // UpdateSecret(mysql, username1, keyword2);
-    
-    // printf("首次登陆-4:%d\n", JudgeUser(mysql, username1, keyword1));
-    // printf("密码错误-2:%d\n", JudgeUser(mysql, username1, keyword2));
-    // printf("用户消失-3:%d\n", JudgeUser(mysql, username2, keyword1));
-    // printf("正    确-1:%d\n", JudgeUser(mysql, username1, keyword1));
-    
-    // UpdateSecret(mysql,username1,keyword2);
-    
-    // AddOnlineUser(mysql, username1,1);
-    // AddOnlineUser(mysql, username2,2);
-    // AddOnlineUser(mysql, username3,3);
-    // AddOnlineUser(mysql, username4,4);
-    // AddOnlineUser(mysql, username5,5);
-    
-    // printf("%d\n",GetOnlineId(mysql,username1));
-    // printf("%s\n",GetOnlineUsername(mysql,2));
-    
-    // char *buf = GetAllUsers(mysql);
-    // if (buf != NULL)
-    // {
-    //     printf("%s\n", buf);
-    //     free(buf);
-    // }
-    // else
-    // {
-    //     printf("empty\n");
-    // }
-    
-    
-    // DelOnlineUser(mysql, username1);
-    // DelOnlineUser(mysql, username2);
-    // DelOnlineUser(mysql, username3);
-    // DelOnlineUser(mysql, username4);
-    // DelOnlineUser(mysql, username5);
-    
-    char* buf;
+    char username1[16] = "MiaoMiaoYang";
+    char username2[16] = "MiaoMiaoYan";
+    char username3[16] = "MiaoMiaoYag";
+    char username4[16] = "MiaoMiaoYng";
+    char username5[16] = "MiaoMiaoang";
+    char keyword1[12] = "123456";
+    char keyword2[12] = "mkamskksa";
+
+    UpdateSecret(mysql, username1, keyword2);
+
+    printf("首次登陆-4:%d\n", JudgeUser(mysql, username1, keyword1));
+    printf("密码错误-2:%d\n", JudgeUser(mysql, username1, keyword2));
+    printf("用户消失-3:%d\n", JudgeUser(mysql, username2, keyword1));
+    printf("正    确-1:%d\n", JudgeUser(mysql, username1, keyword1));
+
+    UpdateSecret(mysql, username1, keyword2);
+
+    AddOnlineUser(mysql, username1, 1);
+    AddOnlineUser(mysql, username2, 2);
+    AddOnlineUser(mysql, username3, 3);
+    AddOnlineUser(mysql, username4, 4);
+    AddOnlineUser(mysql, username5, 5);
+
+    printf("%d\n", GetOnlineId(mysql, username1));
+    printf("%s\n", GetOnlineUsername(mysql, 2));
+
+    char *buf = GetAllUsers(mysql);
+    if (buf != NULL)
+    {
+        printf("%s\n", buf);
+        free(buf);
+    }
+    else
+    {
+        printf("empty\n");
+    }
+
+    DelOnlineUser(mysql, username1);
+    DelOnlineUser(mysql, username2);
+    DelOnlineUser(mysql, username3);
+    DelOnlineUser(mysql, username4);
+    DelOnlineUser(mysql, username5);
+
     buf = GetAllUsers(mysql);
     if (buf != NULL)
     {
@@ -713,60 +786,136 @@ int main(int argc, char *argv[])
         free(buf);
     }
 
-    // char from[] = "MiaoMiaoYang";
-    // char to[] = "zhengxuanci";
+    char from[] = "MiaoMiaoYang";
+    char to[] = "zhengxuanci";
 
-    // char msg1[20] = "0000hhhhhhh1";
-    // char msg2[20] = "0000hhhhhhh2";
-    // char msg3[20] = "0000hhhhhhh3";
-    // char msg4[20] = "0000hhhhhhh4";
-    // char msg5[20] = "0000hhhhhhh5";
+    char msg1[20] = "0000hhhhhhh1";
+    char msg2[20] = "0000hhhhhhh2";
+    char msg3[20] = "0000hhhhhhh3";
+    char msg4[20] = "0000hhhhhhh4";
+    char msg5[20] = "0000hhhhhhh5";
 
-    // uint16_t num = 12;
-    // memcpy(&(msg1[2]), &num, 2);
-    // memcpy(&(msg2[2]), &num, 2);
-    // memcpy(&(msg3[2]), &num, 2);
-    // memcpy(&(msg4[2]), &num, 2);
-    // memcpy(&(msg5[2]), &num, 2);
+    uint16_t num = 12;
+    memcpy(&(msg1[2]), &num, 2);
+    memcpy(&(msg2[2]), &num, 2);
+    memcpy(&(msg3[2]), &num, 2);
+    memcpy(&(msg4[2]), &num, 2);
+    memcpy(&(msg5[2]), &num, 2);
 
-    // PackMsg(msg1, num);
-    // PackMsg(msg2, num);
-    // PackMsg(msg3, num);
-    // PackMsg(msg4, num);
-    // PackMsg(msg5, num);
+    PackMsg(msg1, num);
+    PackMsg(msg2, num);
+    PackMsg(msg3, num);
+    PackMsg(msg4, num);
+    PackMsg(msg5, num);
 
-    // SetMessageToDB(mysql, from, to, msg1);
-    // SetMessageToDB(mysql, from, to, msg2);
-    // SetMessageToDB(mysql, from, to, msg3);
-    // SetMessageToDB(mysql, from, to, msg4);
-    // SetMessageToDB(mysql, from, to, msg5);
+    SetMessageToDB(mysql, from, to, msg1);
+    SetMessageToDB(mysql, from, to, msg2);
+    SetMessageToDB(mysql, from, to, msg3);
+    SetMessageToDB(mysql, from, to, msg4);
+    SetMessageToDB(mysql, from, to, msg5);
 
-    // printf("\n-------------------------\n第一次查询\n");
+    printf("\n-------------------------\n第一次查询\n");
 
-    // char **get = NULL;
-    // int gnum = GetSendMessage(mysql, to, &get);
-    // printf("num:%d\n", gnum);
+    char **get = NULL;
+    int gnum = GetSendMessage(mysql, to, &get);
+    printf("num:%d\n", gnum);
 
-    // int i = 0;
-    // for (i = 0; i < gnum; i++)
-    // {
-    //     Str2int2(get[i], num);
-    // }
+    int i = 0;
+    for (i = 0; i < gnum; i++)
+    {
+        Str2int2(get[i], num);
+    }
 
-    // printf("\n-------------------------\n第2次查询\n");
-    // get = NULL;
+    printf("\n-------------------------\n第2次查询\n");
+    get = NULL;
 
-    // gnum = GetSendMessage(mysql, to, &get);
-    // printf("num:%d\n", gnum);
+    gnum = GetSendMessage(mysql, to, &get);
+    printf("num:%d\n", gnum);
 
-    // for (i = 0; i < gnum; i++)
-    // {
-    //     Str2int2(get[i], num);
-    // }
+    for (i = 0; i < gnum; i++)
+    {
+        Str2int2(get[i], num);
+    }
 
     /* 关闭整个连接 */
     mysql_close(mysql);
+}
 
+void test3()
+{
+    MYSQL *mysql;
+
+    InitDatabase(&mysql);
+
+    char *buf = NULL;
+
+    buf = GetAllOnlineUsers(mysql);
+    printf("%s\n", buf);
+
+    /* 关闭整个连接 */
+    mysql_close(mysql);
+}
+
+void getcmessage()
+{
+    MYSQL *_mysql;
+
+    InitDatabase(&_mysql);
+
+    MYSQL_RES *result;
+    MYSQL_ROW row;
+
+    /* 进行查询，成功返回0，不成功非0
+    1、查询字符串存在语法错误
+    2、查询不存在的数据表 */
+    char sql[200];
+    sprintf(
+        sql,
+        "select * from cMessage;");
+
+    if (mysql_query(_mysql, sql))
+    {
+        printf("mysql_query_connect failed(%s)", mysql_error(_mysql));
+        return;
+    }
+
+    /* 将查询结果存储起来，出现错误则返回NULL
+       注意：查询结果为NULL，不会返回NULL */
+    if ((result = mysql_store_result(_mysql)) == NULL)
+    {
+        printf("mysql_store_result failed");
+        return;
+    }
+
+    /* 获得数据库中所查询到的数据的数量 - 建立空间 */
+    int resultnum = (int)mysql_num_rows(result);
+    int i = 0;
+
+    /* 循环读取所有满足条件的记录
+       1、返回的列顺序与select指定的列顺序相同，从row[0]开始
+       2、不论数据库中是什么类型，C中都当作是字符串来进行处理，如果有必要，需要自己进行转换
+       3、根据自己的需要组织输出格式 */
+
+    //printf("\n ----------------- \n 数据库代码中测试 \n");
+
+    i = 0;
+    while ((row = mysql_fetch_row(result)) != NULL && i < resultnum)
+    {
+        printf("from_user: %s to_user: %s cmessage:\n",row[0],row[1]);
+        Str2int2(row[2],20);
+        printf("\n");
+    }
+
+    /* 释放result */
+    mysql_free_result(result);
+
+    /* 关闭整个连接 */
+    mysql_close(_mysql);
+}
+
+int main(int argc, char *argv[])
+{
+    getcmessage();
     return 0;
 }
 
