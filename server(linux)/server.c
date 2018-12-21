@@ -402,11 +402,11 @@ int sendOnlineFrame(MYSQL* mysql,char username[])
 int toAllUsers(MYSQL* mysql,char username[],char *msg)
 {
 	char* p;
-	char *allUserText;//所有在线用户，格式：“@name1\0@name2\0....#”
+	char *allUserText=NULL;//所有在线用户，格式：“@name1\0@name2\0....#”
 	char targetUsername[20];
 	int isEnd=0;
 	int len=0;
-	allUserText=GetOnlineUsers(mysql);
+	allUserText=GetAllOnlineUsers(mysql);
 	p=allUserText+1;//避开第一个@
 	while(1)
 	{

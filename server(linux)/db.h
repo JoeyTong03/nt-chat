@@ -44,3 +44,5 @@ int GetSendMessage(MYSQL* _mysql,char* username,char*** _return);
 
 //服务端子进程向其他子进程发送包装好的帧
 void SetMessageToDB(MYSQL* _mysql,char* fromuser,char* touser,char* msg);
+
+char *GetAllOnlineUsers(MYSQL *_mysql);
