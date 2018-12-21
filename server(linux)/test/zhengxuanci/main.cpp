@@ -46,8 +46,13 @@ int main(int argc, char *argv[])
 	accept(socket.socket, "好友初始化帧");
 
 	socket.SendTextFrame(QString("This is message from zhengcuanci"), QString("MiaoMiaoYang"));
-		
+
+	accept(socket.socket, "文本应答帧");
+
+
 	socket.SendTextFrame(QString("This is message from zhengcuanci"), QString("tongjiayan"));
+
+	accept(socket.socket, "文本应答帧");
 
 
 	return a.exec();

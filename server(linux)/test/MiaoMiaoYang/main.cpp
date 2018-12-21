@@ -52,10 +52,8 @@ void test3()
 	accept(socket.socket, "zhengxuanci 文本消息帧");
 }
 
-int main(int argc, char *argv[])
+void test2()
 {
-	QCoreApplication a(argc, argv);
-
 	ClientSocket socket;
 
 	socket.connectServer();
@@ -64,15 +62,20 @@ int main(int argc, char *argv[])
 
 	accept(socket.socket, "报道应答帧");
 
-	socket.SendChangeSecretFrame(QString("123456"));
+	socket.SendChangeSecretFrame(QString("654321"));
 
 	accept(socket.socket, "好友初始化帧");
 
 	accept(socket.socket, "tongjiayan 好友上线帧");
 
 	accept(socket.socket, "tongjiayan 文本消息帧");
+}
 
+int main(int argc, char *argv[])
+{
+	QCoreApplication a(argc, argv);
 
+	test3();
 
 	return a.exec();
 

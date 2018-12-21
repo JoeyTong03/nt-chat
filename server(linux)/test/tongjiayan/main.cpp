@@ -45,17 +45,16 @@ void test3()
 
 	socket.SendTextFrame(QString("This is message from tongjiayan"), QString("MiaoMiaoYang"));
 
+	accept(socket.socket, "文本应答帧");
+
 	accept(socket.socket, "zhengxuanci 好友上线帧");
 
 	accept(socket.socket, "zhengxuanci 文本消息帧");
 
 }
 
-int main(int argc, char *argv[])
+void test2()
 {
-	QCoreApplication a(argc, argv);
-
-
 	ClientSocket socket;
 
 	socket.connectServer();
@@ -72,6 +71,14 @@ int main(int argc, char *argv[])
 
 	accept(socket.socket, "消息应答帧");
 
+
+}
+
+int main(int argc, char *argv[])
+{
+	QCoreApplication a(argc, argv);
+
+	test3();
 
 	return a.exec();
 
