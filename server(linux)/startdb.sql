@@ -49,4 +49,14 @@ create Table onlineuser(
     UNIQUE (id)
 )character set=gbk;
 
-
+-- ----------------------------
+-- Table structure for `cMessage`
+-- 信息表
+-- ----------------------------
+drop Table if exists cMessage;
+create Table cMessage(
+    from_user varchar(16),          /* 消息的发送方 */
+    to_user varchar(16) not null,   /* 消息的接收方 */
+    msg varchar(1024),              /* 发送的消息 */
+    read_flag boolean default true  /* 接收方是否已经接受到这条消息，true-没有接受,false-已经接受 */
+)character set=gbk;
