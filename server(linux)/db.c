@@ -378,7 +378,7 @@ void UnpackMsg(char *_msg, int _len)
 }
 
 //返回当前所有在线用户
-char* GetAllUsers(MYSQL *_mysql)
+char* GetAllOnlineUsers(MYSQL *_mysql)
 {
     MYSQL_RES *result;
     MYSQL_ROW row;
@@ -415,16 +415,97 @@ char* GetAllUsers(MYSQL *_mysql)
     {
         if (buf == NULL)
         {
-            size = strlen(row[0]) + 3;
+            size = strlen(row[0]) + 2;
             buf = (char *)malloc(size * sizeof(char));
             sprintf(buf, "@%s", row[0]);
         }
         else
         {
             char *tmpbuf = NULL;
-            size += strlen(row[0]) + 3;
+            size += strlen(row[0]) + 2;
             tmpbuf = (char *)malloc(size * sizeof(char));
             sprintf(tmpbuf, "%s@%s", buf, row[0]);
+            free(buf);
+            buf = tmpbuf;
+        }
+    }
+
+    char *final = (char *)malloc(sizeof(char) * (size + 1));
+    sprintf(final, "%s#", buf);
+    free(buf);
+
+    /* 释放result */
+    mysql_free_result(result);
+
+    return final;
+}
+
+//返回当前所有用户
+char* GetAllUsers(MYSQL *_mysql)
+{
+    MYSQL_RES *result;
+    MYSQL_ROW row;
+
+    /* 进行查询，成功返回0，不成功非0
+    1、查询字符串存在语法错误
+    2、查询不存在的数据表 */
+    char sql[200];
+    sprintf(
+        sql,
+        "select user.username, (select count(onlineuser.username) from onlineuser where onlineuser.username=user.username) count from user;"
+    );
+    /***********************************
+     * 返回的结果说明：
+     * username:
+     * @MiaoMiaoYang @zhengxuanci @tongjiayan
+     * 
+     * onlineuser:
+     * @MiaoMiaoYang
+     * 
+     * 查询返回结果：
+     * +--------------+-------+
+     * | username     | count |
+     * +--------------+-------+ 
+     * | MiaoMiaoYang |     1 |
+     * | tongjiayan   |     0 |
+     * | zhengxuanci  |     0 |
+     * +--------------+-------+
+     **********************************/
+
+    if (mysql_query(_mysql, sql))
+    {
+        printf("mysql_query_connect failed(%s)", mysql_error(_mysql));
+        return NULL;
+    }
+
+    /* 将查询结果存储起来，出现错误则返回NULL
+       注意：查询结果为NULL，不会返回NULL */
+    if ((result = mysql_store_result(_mysql)) == NULL)
+    {
+        printf("mysql_store_result failed");
+        return NULL;
+    }
+
+    /* 循环读取所有满足条件的记录
+       1、返回的列顺序与select指定的列顺序相同，从row[0]开始
+       2、不论数据库中是什么类型，C中都当作是字符串来进行处理，如果有必要，需要自己进行转换
+       3、根据自己的需要组织输出格式 */
+    char *buf = NULL;
+    int size = 0;
+    while ((row = mysql_fetch_row(result)) != NULL)
+    {
+        if (buf == NULL)
+        {
+            size = strlen(row[0]) + 3;
+            buf = (char *)malloc(size * sizeof(char));
+            sprintf(buf, "@%s%s", row[0],row[1]);
+        }
+        else
+        {
+            char *tmpbuf = NULL;
+            size += strlen(row[0]) + 3;
+            tmpbuf = (char *)malloc(size * sizeof(char));
+            sprintf(tmpbuf, "%s@%s%s", buf, row[0],row[1]);
             free(buf);
             buf = tmpbuf;
         }
