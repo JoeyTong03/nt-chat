@@ -17,15 +17,15 @@
 #include <sys/file.h>//flock,lockf
 #include <errno.h>
 #include <signal.h>
-#include <sys/prctl.h>//ä¿®æ”¹è¿›ç¨‹å
-#include <sys/msg.h> //æ¶ˆæ¯é˜Ÿåˆ—
+#include <sys/prctl.h>//ĞŞ¸Ä½ø³ÌÃû
+#include <sys/msg.h> //ÏûÏ¢¶ÓÁĞ
 
 
 #define BUFSIZE 1024
-#define LEN32	32	//32å­—èŠ‚çš„å¸§
-#define LEN16	16	//16å­—èŠ‚çš„å¸§
+#define LEN32	32	//32×Ö½ÚµÄÖ¡
+#define LEN16	16	//16×Ö½ÚµÄÖ¡
 
-#define MAXNUM_CLIENT 10 //æœ€å¤šçš„å®¢æˆ·ç«¯æ•°é‡
+#define MAXNUM_CLIENT 10 //×î¶àµÄ¿Í»§¶ËÊıÁ¿
 
 #include "ServerWriteLog.h"
 #include "db.h"
@@ -42,40 +42,40 @@ typedef struct Msg
 }Msg;
 
 
-/* ç­‰å¾…å­è¿›ç¨‹ç»“æŸï¼Œé¿å…å‡ºç°åƒµå°¸è¿›ç¨‹ */
+/* µÈ´ı×Ó½ø³Ì½áÊø£¬±ÜÃâ³öÏÖ½©Ê¬½ø³Ì */
 void wait4children(int sig);
 
-/* åˆå§‹åŒ–åˆ›å»ºsocketæè¿°ç¬¦ */
+/* ³õÊ¼»¯´´½¨socketÃèÊö·û */
 int initSocketFd(int *socket_fd,int port);
 
-/* åˆå§‹åŒ–è¿æ¥socketæè¿°ç¬¦ */
+/* ³õÊ¼»¯Á¬½ÓsocketÃèÊö·û */
 int initConnection(int* connect_fd,int socket_fd );
 
-/* ç™»å½•æ—¶åˆå§‹åŒ–ï¼Œè´Ÿè´£ç”¨æˆ·ç™»å½•æ—¶çš„è®¤è¯ã€æ”¹å¯† */
+/* µÇÂ¼Ê±³õÊ¼»¯£¬¸ºÔğÓÃ»§µÇÂ¼Ê±µÄÈÏÖ¤¡¢¸ÄÃÜ */
 int initLogin(int *connect_fd,MYSQL *mysql,char username[],int client_num);
 
-/* æ£€æŸ¥æŠ¥é“å¸§ï¼Œåˆ¤æ–­ç”¨æˆ·åˆæ³•æ€§ï¼›åŒæ—¶å‚æ•°ä¼ é€’è·å¾—username */
+/* ¼ì²é±¨µÀÖ¡£¬ÅĞ¶ÏÓÃ»§ºÏ·¨ĞÔ£»Í¬Ê±²ÎÊı´«µİ»ñµÃusername */
 int identify(MYSQL *mysql,char buf[],char username[],int client_num);
 
-/* ç­‰å¾…æ¥æ”¶æ”¹å¯†å¸§ï¼Œå¹¶åœ¨æœåŠ¡ç«¯å®Œæˆæ•°æ®æ›´æ–° */
+/* µÈ´ı½ÓÊÕ¸ÄÃÜÖ¡£¬²¢ÔÚ·şÎñ¶ËÍê³ÉÊı¾İ¸üĞÂ */
 int changeSecret(int *connect_fd, MYSQL *mysql, char username[]);
 
-/* å‘å…¶ä»–ç”¨æˆ·å‘é€ä¸Šçº¿å¸§ */
+/* ÏòÆäËûÓÃ»§·¢ËÍÉÏÏßÖ¡ */
 int sendOnlineFrame(MYSQL* mysql,char username[]);
 
 
-/* å‘å…¶ä»–ç”¨æˆ·å‘é€ä¸Šçº¿å¸§åè¿›å…¥èŠå¤©çŠ¶æ€ */
+/* ÏòÆäËûÓÃ»§·¢ËÍÉÏÏßÖ¡ºó½øÈëÁÄÌì×´Ì¬ */
 int interactBridge(int *connect_fd, MYSQL *mysql,char username[],int client_num);
 
 
 
-/* è§£æsendBufè·å¾—ç›®æ ‡ç”¨æˆ·åtargetUserName */
+/* ½âÎösendBuf»ñµÃÄ¿±êÓÃ»§ÃûtargetUserName */
 int getTargetUsername(char buf[],char targetUsername[],int* isToALL);
 
-/* usernameå°†æ•°æ®å¸§å‘ç»™æ‰€æœ‰ç”¨æˆ· */
+/* username½«Êı¾İÖ¡·¢¸øËùÓĞÓÃ»§ */
 int toAllUsers(MYSQL* mysql,char username[],char *msg);
 
-/* è¿”å›bufä¸­ç¬¬ä¸€ä¸ªeçš„ä¸‹æ ‡ï¼ŒisEndè¿”å›æ˜¯å¦å·²ç»åˆ°ç»“å°¾ */
+/* ·µ»ØbufÖĞµÚÒ»¸öeµÄÏÂ±ê£¬isEnd·µ»ØÊÇ·ñÒÑ¾­µ½½áÎ² */
 int myfind(char buf[],char e,int *isEnd);
 
 #endif

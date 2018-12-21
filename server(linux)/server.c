@@ -1,6 +1,6 @@
 #include "server.h"
 
-/* ç­‰å¾…å­è¿›ç¨‹ç»“æŸï¼Œé¿å…å‡ºç°åƒµå°¸è¿›ç¨‹ */
+/* µÈ´ı×Ó½ø³Ì½áÊø£¬±ÜÃâ³öÏÖ½©Ê¬½ø³Ì */
 void wait4children(int sig)
 {
 	int status;
@@ -8,32 +8,32 @@ void wait4children(int sig)
 		;
 }
 
-/* åˆå§‹åŒ–åˆ›å»ºsocketæè¿°ç¬¦ */
+/* ³õÊ¼»¯´´½¨socketÃèÊö·û */
 int initSocketFd(int *socket_fd, int port)
 {
-	struct sockaddr_in servaddr; //serverTCPåè®®æ—
+	struct sockaddr_in servaddr; //serverTCPĞ­Òé×å
 	if ((*socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
 	{
 		printf("Fail to create socket:%s(errno:%d)\n", strerror(errno), errno);
 		return -2;
 	}
 
-	//ç½®ç«¯å£å¤ç”¨
+	//ÖÃ¶Ë¿Ú¸´ÓÃ
 	int opt = 1;
 	if (setsockopt(*socket_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&opt, sizeof(opt)) < 0)
 	{
-		printf("Fail to reuse portï¼šerrno=%d(%s)\n", errno, strerror(errno));
+		printf("Fail to reuse port£ºerrno=%d(%s)\n", errno, strerror(errno));
 		close(*socket_fd);
 		return -3;
 	}
 
-	//åˆå§‹åŒ–
+	//³õÊ¼»¯
 	memset(&servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); //IPåœ°å€è®¾ç½®æˆINADDR_ANY
-	servaddr.sin_port = htons(port);			  //è®¾ç½®çš„ç«¯å£
+	servaddr.sin_addr.s_addr = htonl(INADDR_ANY); //IPµØÖ·ÉèÖÃ³ÉINADDR_ANY
+	servaddr.sin_port = htons(port);			  //ÉèÖÃµÄ¶Ë¿Ú
 
-	//è®¾ç½®éé˜»å¡
+	//ÉèÖÃ·Ç×èÈû
 	int flags;
 	if ((flags = fcntl(*socket_fd, F_GETFL, 0)) == -1)
 	{
@@ -46,14 +46,14 @@ int initSocketFd(int *socket_fd, int port)
 		return -5;
 	}
 
-	//ç»‘å®šsocket_fd
+	//°ó¶¨socket_fd
 	if (bind(*socket_fd, (struct sockaddr *)&servaddr, sizeof(servaddr)) == -1)
 	{
 		printf("Fail to bind socket:%s(errno:%d)\n", strerror(errno), errno);
 		return -6;
 	}
 
-	//å¼€å§‹ç›‘å¬æ˜¯å¦æœ‰å®¢æˆ·ç«¯è¿æ¥
+	//¿ªÊ¼¼àÌıÊÇ·ñÓĞ¿Í»§¶ËÁ¬½Ó
 	if (listen(*socket_fd, MAXNUM_CLIENT) == -1)
 	{
 		printf("Fail to listen socket:%s(errno:%d)\n", strerror(errno), errno);
@@ -63,7 +63,7 @@ int initSocketFd(int *socket_fd, int port)
 	return 0;
 }
 
-/* åˆå§‹åŒ–è¿æ¥socketæè¿°ç¬¦ */
+/* ³õÊ¼»¯Á¬½ÓsocketÃèÊö·û */
 int initConnection(int *connect_fd, int socket_fd)
 {
 	if ((*connect_fd = accept(socket_fd, (struct sockaddr *)NULL, NULL)) == -1)
@@ -72,7 +72,7 @@ int initConnection(int *connect_fd, int socket_fd)
 		return -1;
 	}
 
-	//è®¾ç½®éé˜»å¡æ¨¡å¼
+	//ÉèÖÃ·Ç×èÈûÄ£Ê½
 	int flags = 0;
 	if ((flags = fcntl(*connect_fd, F_GETFL, 0)) == -1)
 	{
@@ -89,13 +89,13 @@ int initConnection(int *connect_fd, int socket_fd)
 	return 0;
 }
 
-/* ç™»å½•æ—¶åˆå§‹åŒ–ï¼Œè´Ÿè´£ç”¨æˆ·ç™»å½•æ—¶çš„è®¤è¯ã€æ”¹å¯† */
+/* µÇÂ¼Ê±³õÊ¼»¯£¬¸ºÔğÓÃ»§µÇÂ¼Ê±µÄÈÏÖ¤¡¢¸ÄÃÜ */
 int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 {
 	char recvBuf[LEN32];
 	char *sendBuf;
-	char newSecret[15];	//æ–°å¯†ç 
-	int replyType = Right; //åº”ç­”ç±»å‹ç¼ºçœå€¼Right
+	char newSecret[15];	//ĞÂÃÜÂë
+	int replyType = Right; //Ó¦´ğÀàĞÍÈ±Ê¡ÖµRight
 
 	fd_set rfd, wfd;
 	FD_ZERO(&rfd);
@@ -103,9 +103,9 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 	int maxfd = *connect_fd;
 
 	FD_SET(*connect_fd, &rfd);
-	if (select(maxfd + 1, &rfd, NULL, NULL, NULL) > 0) //æœ‰å¯è¯»çš„æ•°æ®
+	if (select(maxfd + 1, &rfd, NULL, NULL, NULL) > 0) //ÓĞ¿É¶ÁµÄÊı¾İ
 	{
-		/* æ¥æ”¶ä»clientç«¯å‘æ¥çš„å¸§ */
+		/* ½ÓÊÕ´Óclient¶Ë·¢À´µÄÖ¡ */
 		if (recv(*connect_fd, recvBuf, LEN32, 0) < 0)
 		{
 			printf("Recv username error!\n");
@@ -114,31 +114,31 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 		}
 	}
 
-	/* å¯¹é¦–å¸§è¿›è¡Œæ£€éªŒï¼Œå¦‚æœæ­£ç¡®ç›´æ¥æ›´æ–°æ•°æ®åº“*/
+	/* ¶ÔÊ×Ö¡½øĞĞ¼ìÑé£¬Èç¹ûÕıÈ·Ö±½Ó¸üĞÂÊı¾İ¿â*/
 	int identifyResult = identify(mysql, recvBuf, username, client_num);
 	switch (identifyResult)
 	{
-	case -2: //ä¸æ˜¯æŠ¥é“å¸§,ç›´æ¥å…³é—­è¿æ¥
+	case -2: //²»ÊÇ±¨µÀÖ¡,Ö±½Ó¹Ø±ÕÁ¬½Ó
 		close(*connect_fd);
 		break;
-	case -3: //å¯†ç é”™è¯¯
+	case -3: //ÃÜÂë´íÎó
 		replyType = SecretErr;
 		break;
-	case -4: //ç”¨æˆ·ä¸å­˜åœ¨
+	case -4: //ÓÃ»§²»´æÔÚ
 		replyType = NameNoExist;
 		break;
-	case -5: //éœ€è¦æ”¹å¯†
+	case -5: //ĞèÒª¸ÄÃÜ
 		replyType = NeedUpdateSecret;
 		break;
-	default: //æ­£ç¡®
+	default: //ÕıÈ·
 		replyType = Right;
 		break;
 	}
 
-	/* å‘é€åº”ç­”å¸§ */
+	/* ·¢ËÍÓ¦´ğÖ¡ */
 	initReplyFrame(replyType, &sendBuf);
 	FD_SET(*connect_fd, &wfd);
-	if (select(maxfd + 1, NULL, &wfd, NULL, NULL) > 0) //æœ‰å¯å†™çš„æ•°æ®
+	if (select(maxfd + 1, NULL, &wfd, NULL, NULL) > 0) //ÓĞ¿ÉĞ´µÄÊı¾İ
 	{
 		if (send(*connect_fd, sendBuf, LEN32, 0) < 0)
 		{
@@ -149,14 +149,14 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 	}
 	
 
-	/* æ›´æ–°åœ¨çº¿ç”¨æˆ· */
+	/* ¸üĞÂÔÚÏßÓÃ»§ */
 	AddOnlineUser(mysql, username, client_num);
 	
-	/* å°†ç™»é™†ä¿¡æ¯å†™å…¥æ—¥å¿—ï¼ŒåŒ…æ‹¬æˆåŠŸ/å¤±è´¥ */
+	/* ½«µÇÂ½ĞÅÏ¢Ğ´ÈëÈÕÖ¾£¬°üÀ¨³É¹¦/Ê§°Ü */
 	WriteReglog(username,replyType);
 	
 	
-	/* å¦‚æœéœ€è¦ä¿®æ”¹å¯†ç ï¼Œç­‰å¾…å®¢æˆ·ç«¯å‘é€SfhChangeSecretå¸§ï¼Œå¹¶è·å–å…¶ä¸­çš„å¯†ç ï¼Œæ›´æ–°æ•°æ®åº“ */
+	/* Èç¹ûĞèÒªĞŞ¸ÄÃÜÂë£¬µÈ´ı¿Í»§¶Ë·¢ËÍSfhChangeSecretÖ¡£¬²¢»ñÈ¡ÆäÖĞµÄÃÜÂë£¬¸üĞÂÊı¾İ¿â */
 	if (replyType == NeedUpdateSecret)
 	{
 		if (changeSecret(connect_fd, mysql, username) < 0)
@@ -166,7 +166,7 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 		
 
 
-	/* ç»™è¯¥å®¢æˆ·ç«¯å‘é€å¥½å‹åˆå§‹åŒ–å¸§ */
+	/* ¸ø¸Ã¿Í»§¶Ë·¢ËÍºÃÓÑ³õÊ¼»¯Ö¡ */
 	char *nameList = GetAllUsers(mysql);
 	char *friInitFrame;
 	int friInitFrame_length;
@@ -178,21 +178,21 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 		return -5;
 	}
 	
-	/* ç»™å…¶ä»–ç”¨æˆ·å‘é€è¯¥ç”¨æˆ·çš„ä¸Šçº¿å¸§ */
+	/* ¸øÆäËûÓÃ»§·¢ËÍ¸ÃÓÃ»§µÄÉÏÏßÖ¡ */
 	sendOnlineFrame(mysql,username);
 	
 	return 0;
 }
 
-/* å‘å…¶ä»–ç”¨æˆ·å‘é€ä¸Šçº¿å¸§åè¿›å…¥èŠå¤©çŠ¶æ€ */
+/* ÏòÆäËûÓÃ»§·¢ËÍÉÏÏßÖ¡ºó½øÈëÁÄÌì×´Ì¬ */
 int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 {
 	
 	printf("Begin communication!\n");
 	
-	int sendCount=0;//éœ€è¦å‘é€ç»™å­è¿›ç¨‹å¯¹åº”å®¢æˆ·ç«¯çš„æ•°æ®å¸§æ•°é‡
-	char **sendBuf;//éœ€è¦å‘é€ç»™å­è¿›ç¨‹å¯¹åº”å®¢æˆ·ç«¯çš„æ•°æ®å¸§(äºŒç»´æ•°ç»„)
-	char recvBuf[BUFSIZE];//ä»å­è¿›ç¨‹å¯¹åº”å®¢æˆ·ç«¯æ”¶åˆ°çš„æ•°æ®å¸§
+	int sendCount=0;//ĞèÒª·¢ËÍ¸ø×Ó½ø³Ì¶ÔÓ¦¿Í»§¶ËµÄÊı¾İÖ¡ÊıÁ¿
+	char **sendBuf;//ĞèÒª·¢ËÍ¸ø×Ó½ø³Ì¶ÔÓ¦¿Í»§¶ËµÄÊı¾İÖ¡(¶şÎ¬Êı×é)
+	char recvBuf[BUFSIZE];//´Ó×Ó½ø³Ì¶ÔÓ¦¿Í»§¶ËÊÕµ½µÄÊı¾İÖ¡
 	
 	fd_set rfd;
 	int maxfd ;
@@ -201,9 +201,9 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 	
 	
 	char targetUsername[20];
-	int isToALL=0;//æ˜¯å¦æ˜¯å‘ç»™æ‰€æœ‰ç”¨æˆ·
-	char *msg;//å­è¿›ç¨‹å¯¹åº”çš„å®¢æˆ·ç«¯å‡†å¤‡å‘é€çš„æ•°æ®å¸§
-	int frameType=0;//ä»å­è¿›ç¨‹å¯¹åº”çš„å®¢æˆ·ç«¯æ”¶åˆ°çš„å¸§çš„ç±»å‹
+	int isToALL=0;//ÊÇ·ñÊÇ·¢¸øËùÓĞÓÃ»§
+	char *msg;//×Ó½ø³Ì¶ÔÓ¦µÄ¿Í»§¶Ë×¼±¸·¢ËÍµÄÊı¾İÖ¡
+	int frameType=0;//´Ó×Ó½ø³Ì¶ÔÓ¦µÄ¿Í»§¶ËÊÕµ½µÄÖ¡µÄÀàĞÍ
 	
 	
 	
@@ -211,7 +211,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 
 	while(1)
 	{
-		/* æŸ¥çœ‹æ˜¯å¦æœ‰æ•°æ®éœ€è¦å‘é€ç»™è¯¥å­è¿›ç¨‹å¯¹åº”çš„å®¢æˆ·ç«¯ */
+		/* ²é¿´ÊÇ·ñÓĞÊı¾İĞèÒª·¢ËÍ¸ø¸Ã×Ó½ø³Ì¶ÔÓ¦µÄ¿Í»§¶Ë */
 		sendCount=GetSendMessage(mysql,username,&sendBuf);
 		
 		int i;
@@ -227,7 +227,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 		}		
 		
 		
-		/* æŸ¥çœ‹å­è¿›ç¨‹å¯¹åº”çš„å®¢æˆ·ç«¯æ˜¯å¦æœ‰æ•°æ®è¦å‘é€ */
+		/* ²é¿´×Ó½ø³Ì¶ÔÓ¦µÄ¿Í»§¶ËÊÇ·ñÓĞÊı¾İÒª·¢ËÍ */
 		FD_ZERO(&rfd);
         tv.tv_sec = 0;
         tv.tv_usec = 300;
@@ -243,7 +243,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 			continue;
 		else
 		{
-			/* æ¥æ”¶ä»clientç«¯å‘æ¥çš„å¸§ */
+			/* ½ÓÊÕ´Óclient¶Ë·¢À´µÄÖ¡ */
 			if (recv(*connect_fd, recvBuf, BUFSIZE, 0) < 0)
 			{
 				printf("Recv frame error!\n");
@@ -282,7 +282,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				{	
 					SetMessageToDB(mysql,username,targetUsername,msg);
 					printf("[%s send data to %s]:%s\n",username,targetUsername,recvBuf);
-					WriteSendText(username,targetUsername,0);//0æ˜¯å‘é€æˆåŠŸæˆ–å¤±è´¥çš„ç±»å‹
+					WriteSendText(username,targetUsername,0);//0ÊÇ·¢ËÍ³É¹¦»òÊ§°ÜµÄÀàĞÍ
 				}
 			}
 		}
@@ -293,26 +293,26 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 }
 
 /* 
-	åˆ¤æ–­è¿æ¥åæ”¶åˆ°çš„ç¬¬ä¸€å¸§æ˜¯å¦ä¸ºæŠ¥é“å¸§ï¼›
-	å¦‚æœæ˜¯åˆ™æ ¹æ®å¸§ä¸­æºå¸¦çš„ç”¨æˆ·åä¸å¯†ç æŸ¥è¯¢æ•°æ®åº“è¿›è¡Œè®¤çœŸ 
-	å‚æ•°ï¼šå–‚buf,åusername
+	ÅĞ¶ÏÁ¬½ÓºóÊÕµ½µÄµÚÒ»Ö¡ÊÇ·ñÎª±¨µÀÖ¡£»
+	Èç¹ûÊÇÔò¸ù¾İÖ¡ÖĞĞ¯´øµÄÓÃ»§ÃûÓëÃÜÂë²éÑ¯Êı¾İ¿â½øĞĞÈÏÕæ 
+	²ÎÊı£ºÎ¹buf,ÍÂusername
 	*/
 int identify(MYSQL *mysql, char buf[], char username[], int client_num)
 {
 	char secret[15];
 	int tmp;
 
-	/* åˆ¤æ–­æ”¶åˆ°çš„æ˜¯å¦ä¸ºæŠ¥é“å¸§ï¼Œå¦‚æœä¸æ˜¯ç›´æ¥æ–­å¼€è¿æ¥*/
+	/* ÅĞ¶ÏÊÕµ½µÄÊÇ·ñÎª±¨µÀÖ¡£¬Èç¹û²»ÊÇÖ±½Ó¶Ï¿ªÁ¬½Ó*/
 	if (getType(buf) != SfhRegister)
 	{
 		printf("The first frame isn't SfhRegister!\n");
 		return -2;
 	}
 
-	/* è§£ææŠ¥é“å¸§ï¼Œè·å–ç”¨æˆ·ååŠå¯†ç  */
+	/* ½âÎö±¨µÀÖ¡£¬»ñÈ¡ÓÃ»§Ãû¼°ÃÜÂë */
 	analysisSfhRegister(buf, username, secret);
 
-	/* æ£€æŸ¥ç”¨æˆ·ååŠå¯†ç æ˜¯å¦æ­£ç¡® */
+	/* ¼ì²éÓÃ»§Ãû¼°ÃÜÂëÊÇ·ñÕıÈ· */
 	tmp = JudgeUser(mysql, username, secret);
 
 	switch (tmp)
@@ -333,7 +333,7 @@ int identify(MYSQL *mysql, char buf[], char username[], int client_num)
 	return 0;
 }
 
-/* æ”¹å¯† */
+/* ¸ÄÃÜ */
 int changeSecret(int *connect_fd, MYSQL *mysql, char username[])
 {
 	char buf[LEN16];
@@ -343,9 +343,9 @@ int changeSecret(int *connect_fd, MYSQL *mysql, char username[])
 	FD_ZERO(&rfd);
 	FD_SET(*connect_fd, &rfd);
 	maxfd = *connect_fd + 1;
-	if (select(maxfd + 1, &rfd, NULL, NULL, NULL) > 0) //æœ‰å¯è¯»çš„æ•°æ®
+	if (select(maxfd + 1, &rfd, NULL, NULL, NULL) > 0) //ÓĞ¿É¶ÁµÄÊı¾İ
 	{
-		/* æ¥æ”¶ä»clientç«¯å‘æ¥çš„æ”¹å¯†å¸§ */
+		/* ½ÓÊÕ´Óclient¶Ë·¢À´µÄ¸ÄÃÜÖ¡ */
 		if (recv(*connect_fd, buf, LEN16, 0) < 0)
 		{
 			printf("Recv SfhChangeSecret error!\n");
@@ -354,7 +354,7 @@ int changeSecret(int *connect_fd, MYSQL *mysql, char username[])
 		}
 	}
 
-	if (getType(buf) != SfhChangeSecret) //å¦‚æœä¸æ˜¯æ”¹å¯†å¸§ï¼Œç›´æ¥å…³é—­è¿æ¥
+	if (getType(buf) != SfhChangeSecret) //Èç¹û²»ÊÇ¸ÄÃÜÖ¡£¬Ö±½Ó¹Ø±ÕÁ¬½Ó
 	{
 		printf("Not SfhChangeSecret!\n");
 		close(*connect_fd);
@@ -363,18 +363,18 @@ int changeSecret(int *connect_fd, MYSQL *mysql, char username[])
 
 	//	Str2int2(buf,16);
 
-	/* è§£ææ”¹å¯†å¸§ï¼Œè·å–æ–°å¯†ç  */
+	/* ½âÎö¸ÄÃÜÖ¡£¬»ñÈ¡ĞÂÃÜÂë */
 	analysisSfhChangeSecret(buf, newSecret);
 
 	printf("newsecret %s\n", newSecret);
 
-	/* æ›´æ–°æ•°æ®åº“è¯¥ç”¨æˆ·çš„å¯†ç  */
+	/* ¸üĞÂÊı¾İ¿â¸ÃÓÃ»§µÄÃÜÂë */
 	UpdateSecret(mysql, username, newSecret);
 
 	return 0;
 }
 
-/* å¦‚æœæ˜¯ç»™æ‰€æœ‰ç”¨æˆ·çš„ï¼Œåˆ™isToALL=1;å¦åˆ™é€šè¿‡targetUsernameè¿”å›ç›®æ ‡ç”¨æˆ·å */
+/* Èç¹ûÊÇ¸øËùÓĞÓÃ»§µÄ£¬ÔòisToALL=1;·ñÔòÍ¨¹ıtargetUsername·µ»ØÄ¿±êÓÃ»§Ãû */
 int getTargetUsername(char buf[],char targetUsername[],int *isToALL)
 {
 	strcpy(targetUsername,buf+4);
@@ -385,13 +385,13 @@ int getTargetUsername(char buf[],char targetUsername[],int *isToALL)
 
 int sendOnlineFrame(MYSQL* mysql,char username[])
 {
-	/* ç”Ÿæˆä¸€ä¸ªä¸Šçº¿å¸§ */
+	/* Éú³ÉÒ»¸öÉÏÏßÖ¡ */
 	char *onlineFrame;
 	int onlineFrame_length;
-	onlineFrame_length = CrtOnLineFrame(username, &onlineFrame); //å‡½æ•°å†…éƒ¨ç”³è¯·ç©ºé—´
+	onlineFrame_length = CrtOnLineFrame(username, &onlineFrame); //º¯ÊıÄÚ²¿ÉêÇë¿Õ¼ä
 	printf("The online-frame is %s\n",onlineFrame);
 	
-	/* å°†ä¸Šçº¿å¸§å‘é€ç»™æ‰€æœ‰ç”¨æˆ· */	
+	/* ½«ÉÏÏßÖ¡·¢ËÍ¸øËùÓĞÓÃ»§ */	
 	toAllUsers(mysql,username,onlineFrame);
 	return 0;
 }
@@ -399,12 +399,12 @@ int sendOnlineFrame(MYSQL* mysql,char username[])
 int toAllUsers(MYSQL* mysql,char username[],char *msg)
 {
 	char* p;
-	char *allUserText;//æ‰€æœ‰åœ¨çº¿ç”¨æˆ·ï¼Œæ ¼å¼ï¼šâ€œ@name1\0@name2\0....#â€
+	char *allUserText;//ËùÓĞÔÚÏßÓÃ»§£¬¸ñÊ½£º¡°@name1\0@name2\0....#¡±
 	char targetUsername[20];
 	int isEnd=0;
 	int len=0;
 	allUserText=GetAllUsers(mysql);
-	p=allUserText+1;//é¿å¼€ç¬¬ä¸€ä¸ª@
+	p=allUserText+1;//±Ü¿ªµÚÒ»¸ö@
 	while(1)
 	{
 		len=myfind(p,'@',&isEnd);
@@ -421,7 +421,7 @@ int toAllUsers(MYSQL* mysql,char username[],char *msg)
 	}
 }
 
-/* è¿”å›bufä¸­ç¬¬ä¸€ä¸ªeçš„ä¸‹æ ‡ï¼ŒisEndè¿”å›æ˜¯å¦å·²ç»åˆ°ç»“å°¾ */
+/* ·µ»ØbufÖĞµÚÒ»¸öeµÄÏÂ±ê£¬isEnd·µ»ØÊÇ·ñÒÑ¾­µ½½áÎ² */
 int myfind(char buf[],char e,int *isEnd)
 {
 	int i;

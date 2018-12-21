@@ -1,6 +1,6 @@
 
 /* db.h */
-#include <mysql.h> // mysqlç‰¹æœ‰
+#include <mysql.h> // mysqlÌØÓĞ
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
@@ -12,35 +12,35 @@ enum RETURNTYPE
     TRUE
 };
 
-//åˆå§‹åŒ–æ•°æ®åº“
+//³õÊ¼»¯Êı¾İ¿â
 enum RETURNTYPE InitDatabase(MYSQL **_mysql);
 
-//åˆ¤æ–­è¯¥ç”¨æˆ·æ˜¯ä¸æ˜¯é¦–æ¬¡ç™»é™†
+//ÅĞ¶Ï¸ÃÓÃ»§ÊÇ²»ÊÇÊ×´ÎµÇÂ½
 enum RETURNTYPE JudgeFirstLog(MYSQL *_mysql, char *_username);
 
-//åˆ¤æ–­ç”¨æˆ·å¯†ç æ˜¯å¦æ­£ç¡® 1-æ­£ç¡® 2-å¯†ç é”™è¯¯ 3-ç”¨æˆ·åä¸å­˜åœ¨ 4-é¦–æ¬¡ç™»é™†éœ€è¦æ”¹å¯†[å‰æï¼šç”¨æˆ·åä¸å¯†ç æ­£ç¡®]
+//ÅĞ¶ÏÓÃ»§ÃÜÂëÊÇ·ñÕıÈ· 1-ÕıÈ· 2-ÃÜÂë´íÎó 3-ÓÃ»§Ãû²»´æÔÚ 4-Ê×´ÎµÇÂ½ĞèÒª¸ÄÃÜ[Ç°Ìá£ºÓÃ»§ÃûÓëÃÜÂëÕıÈ·]
 int JudgeUser(MYSQL *_mysql, char *_username, char *_keyword);
 
-//æ›´æ–°æ•°æ®åº“usernameçš„å¯†ç ä¸º_keywork
+//¸üĞÂÊı¾İ¿âusernameµÄÃÜÂëÎª_keywork
 enum RETURNTYPE UpdateSecret(MYSQL *_mysql, char *_username, char *_keyword);
 
-//å½“å‰åœ¨çº¿ç”¨æˆ·å¢åŠ ç”¨æˆ·
+//µ±Ç°ÔÚÏßÓÃ»§Ôö¼ÓÓÃ»§
 enum RETURNTYPE AddOnlineUser(MYSQL *_mysql, char *_username,int id);
 
-//å½“å‰åœ¨çº¿ç”¨æˆ·å‡å°‘ç”¨æˆ·
+//µ±Ç°ÔÚÏßÓÃ»§¼õÉÙÓÃ»§
 enum RETURNTYPE DelOnlineUser(MYSQL *_mysql, char *_username);
 
-//è¿”å›å½“å‰åœ¨çº¿ç”¨æˆ·çš„æ–‡ä»¶å
+//·µ»Øµ±Ç°ÔÚÏßÓÃ»§µÄÎÄ¼şÃû
 char *GetOnlineUsername(MYSQL *_mysql, int _id);
 
-//è¿”å›å½“å‰åœ¨çº¿ç”¨æˆ·çš„IDå·
+//·µ»Øµ±Ç°ÔÚÏßÓÃ»§µÄIDºÅ
 int GetOnlineId(MYSQL *_mysql, char *_username);
 
-//è¿”å›å½“å‰æ‰€æœ‰åœ¨çº¿ç”¨æˆ·
+//·µ»Øµ±Ç°ËùÓĞÔÚÏßÓÃ»§
 char *GetAllUsers(MYSQL *_mysql);
 
-//å¾—åˆ°æ¯ä¸€æ¡æœåŠ¡ç«¯å­è¿›ç¨‹å‘å®¢æˆ·ç«¯æ‰€å‘çš„æ¶ˆæ¯
+//µÃµ½Ã¿Ò»Ìõ·şÎñ¶Ë×Ó½ø³ÌÏò¿Í»§¶ËËù·¢µÄÏûÏ¢
 int GetSendMessage(MYSQL* _mysql,char* username,char*** _return);
 
-//æœåŠ¡ç«¯å­è¿›ç¨‹å‘å…¶ä»–å­è¿›ç¨‹å‘é€åŒ…è£…å¥½çš„å¸§
+//·şÎñ¶Ë×Ó½ø³ÌÏòÆäËû×Ó½ø³Ì·¢ËÍ°ü×°ºÃµÄÖ¡
 void SetMessageToDB(MYSQL* _mysql,char* fromuser,char* touser,char* msg);

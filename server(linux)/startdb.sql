@@ -21,14 +21,14 @@ use GroupChat;
 
 -- ----------------------------
 -- Table structure for `user`
--- ç”¨æˆ·è¡¨
+-- ÓÃ»§±í
 -- ----------------------------
 drop Table if exists user;
 create Table user(
-    username varchar(16) not null,      /* ç”¨æˆ·åï¼Œæœ€å¤§16å­—èŠ‚ */
-    keyword  varchar(12) not null,      /* å¯†ç ï¼Œæœ€å¤§12å­—èŠ‚ */
-    firstlog boolean default false,      /* é¦–æ¬¡ç™»é™† - é»˜è®¤true */
-    infonum  INT not null default 100,  /* å›çœ‹ä¿¡æ¯æ¡æ•° */
+    username varchar(16) not null,      /* ÓÃ»§Ãû£¬×î´ó16×Ö½Ú */
+    keyword  varchar(12) not null,      /* ÃÜÂë£¬×î´ó12×Ö½Ú */
+    firstlog boolean default false,      /* Ê×´ÎµÇÂ½ - Ä¬ÈÏtrue */
+    infonum  INT not null default 100,  /* »Ø¿´ĞÅÏ¢ÌõÊı */
     PRIMARY KEY (username)
 )character set=gbk;
 
@@ -39,24 +39,24 @@ insert into user (username,keyword) values
 
 -- ----------------------------
 -- Table structure for `onlineuser`
--- å½“å‰ç”¨æˆ·è¡¨
+-- µ±Ç°ÓÃ»§±í
 -- ----------------------------
 drop Table if exists onlineuser;
 create Table onlineuser(
-    username varchar(16) not null,  /* ç”¨æˆ·åï¼Œæœ€å¤§16å­—èŠ‚ */
-    id int not null,                /* ç”¨æˆ·ID */
+    username varchar(16) not null,  /* ÓÃ»§Ãû£¬×î´ó16×Ö½Ú */
+    id int not null,                /* ÓÃ»§ID */
     PRIMARY KEY (username),
     UNIQUE (id)
 )character set=gbk;
 
 -- ----------------------------
 -- Table structure for `cMessage`
--- ä¿¡æ¯è¡¨
+-- ĞÅÏ¢±í
 -- ----------------------------
 drop Table if exists cMessage;
 create Table cMessage(
-    from_user varchar(16),          /* æ¶ˆæ¯çš„å‘é€æ–¹ */
-    to_user varchar(16) not null,   /* æ¶ˆæ¯çš„æ¥æ”¶æ–¹ */
-    msg varchar(1024),              /* å‘é€çš„æ¶ˆæ¯ */
-    read_flag boolean default true  /* æ¥æ”¶æ–¹æ˜¯å¦å·²ç»æ¥å—åˆ°è¿™æ¡æ¶ˆæ¯ï¼Œtrue-æ²¡æœ‰æ¥å—,false-å·²ç»æ¥å— */
+    from_user varchar(16),          /* ÏûÏ¢µÄ·¢ËÍ·½ */
+    to_user varchar(16) not null,   /* ÏûÏ¢µÄ½ÓÊÕ·½ */
+    msg varchar(1024),              /* ·¢ËÍµÄÏûÏ¢ */
+    read_flag boolean default true  /* ½ÓÊÕ·½ÊÇ·ñÒÑ¾­½ÓÊÜµ½ÕâÌõÏûÏ¢£¬true-Ã»ÓĞ½ÓÊÜ,false-ÒÑ¾­½ÓÊÜ */
 )character set=gbk;

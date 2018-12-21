@@ -3,76 +3,76 @@
 
 int main(int argc, char **argv)
 {
-	/*---------------å˜é‡å®šä¹‰------------------ */
-	int socket_fd;		//ç”¨äºç›‘å¬çš„æ–‡ä»¶æè¿°ç¬¦
-	int connect_fd;		//ç”¨æˆ·å»ºç«‹è¿æ¥çš„æ–‡ä»¶æè¿°ç¬¦
-	int client_num = 0; //åœ¨çˆ¶è¿›ç¨‹ä¸­è¡¨ç¤ºæœ‰å¤šå°‘ä¸ªè¿æ¥çš„clientï¼Œåœ¨å­è¿›ç¨‹ä¸­è¡¨ç¤ºå­è¿›ç¨‹ç»´æŠ¤çš„æ˜¯å¤šå°‘å·è¿æ¥
-	int main_pid;		//çˆ¶è¿›ç¨‹çš„pidå·
+	/*---------------±äÁ¿¶¨Òå------------------ */
+	int socket_fd;		//ÓÃÓÚ¼àÌıµÄÎÄ¼şÃèÊö·û
+	int connect_fd;		//ÓÃ»§½¨Á¢Á¬½ÓµÄÎÄ¼şÃèÊö·û
+	int client_num = 0; //ÔÚ¸¸½ø³ÌÖĞ±íÊ¾ÓĞ¶àÉÙ¸öÁ¬½ÓµÄclient£¬ÔÚ×Ó½ø³ÌÖĞ±íÊ¾×Ó½ø³ÌÎ¬»¤µÄÊÇ¶àÉÙºÅÁ¬½Ó
+	int main_pid;		//¸¸½ø³ÌµÄpidºÅ
 
-	int maxfd;	 //ç”¨äºselect
-	int selectRet; //selectè¿”å›å€¼
+	int maxfd;	 //ÓÃÓÚselect
+	int selectRet; //select·µ»ØÖµ
 
-	int forkStatus; //forkè¿”å›å€¼
+	int forkStatus; //fork·µ»ØÖµ
 
-	char username[20]; //ç”¨æˆ·å
+	char username[20]; //ÓÃ»§Ãû
 
-	MYSQL *mysql; //æ•°æ®åº“å¥æŸ„
+	MYSQL *mysql; //Êı¾İ¿â¾ä±ú
 
-	/*---------------ä¿¡å·å¤„ç†------------------- */
+	/*---------------ĞÅºÅ´¦Àí------------------- */
 	(void)signal(SIGCHLD, wait4children);
 
-	/* åˆå§‹åŒ–socketæ–‡ä»¶æè¿°ç¬¦ */
+	/* ³õÊ¼»¯socketÎÄ¼şÃèÊö·û */
 	if (initSocketFd(&socket_fd, atoi(argv[1])) < 0)
 		return -1;
 
 
-	/* åˆå§‹åŒ–æ•°æ®åº“ */
+	/* ³õÊ¼»¯Êı¾İ¿â */
 	InitDatabase(&mysql);
 
-	main_pid = getpid();		 //çˆ¶è¿›ç¨‹çš„pidå·
-	while (getpid() == main_pid) //åªå…è®¸çˆ¶è¿›ç¨‹forkå­è¿›ç¨‹
+	main_pid = getpid();		 //¸¸½ø³ÌµÄpidºÅ
+	while (getpid() == main_pid) //Ö»ÔÊĞí¸¸½ø³Ìfork×Ó½ø³Ì
 	{
 
-		/* ç›‘å¬æ˜¯å¦æœ‰æ–°çš„è¿æ¥ï¼›å¦‚æœæœ‰ï¼Œåˆ™forkå­è¿›ç¨‹å¤„ç†å¹¶å‘è¿æ¥ */
+		/* ¼àÌıÊÇ·ñÓĞĞÂµÄÁ¬½Ó£»Èç¹ûÓĞ£¬Ôòfork×Ó½ø³Ì´¦Àí²¢·¢Á¬½Ó */
 		fd_set rfd;
-		//struct timeval timeout = {0, 30}; //30msä¸€è½®ï¼Œè¶…æ—¶å°±è¿›å…¥ä¸‹ä¸€ä¸ªå¾ªç¯
+		//struct timeval timeout = {0, 30}; //30msÒ»ÂÖ£¬³¬Ê±¾Í½øÈëÏÂÒ»¸öÑ­»·
 		maxfd = socket_fd;
 		FD_ZERO(&rfd);
 		FD_SET(socket_fd, &rfd);
 		//selectRet = select(maxfd + 1, &rfd, NULL, NULL, &timeout);
 		selectRet = select(maxfd + 1, &rfd, NULL, NULL, NULL);
-		if (selectRet == 0) //è¶…æ—¶
+		if (selectRet == 0) //³¬Ê±
 			continue;
 
 
-		if (selectRet > 0 && FD_ISSET(socket_fd, &rfd)) //è¯´æ˜æœ‰æ–°çš„è¿æ¥
+		if (selectRet > 0 && FD_ISSET(socket_fd, &rfd)) //ËµÃ÷ÓĞĞÂµÄÁ¬½Ó
 		{
 
-			/* åˆå§‹åŒ–ç”¨äºè¿æ¥çš„æ–‡ä»¶æè¿°ç¬¦ */
+			/* ³õÊ¼»¯ÓÃÓÚÁ¬½ÓµÄÎÄ¼şÃèÊö·û */
 			if (initConnection(&connect_fd, socket_fd) < 0)
 				continue;
 
-			client_num++; //ç”¨äºæ¶ˆæ¯é˜Ÿåˆ—çš„key
+			client_num++; //ÓÃÓÚÏûÏ¢¶ÓÁĞµÄkey
 
-			//å¦‚æœforkå¤±è´¥ï¼Œå»¶æ—¶1såç»§ç»­fork
+			//Èç¹ûforkÊ§°Ü£¬ÑÓÊ±1sºó¼ÌĞøfork
 			while ((forkStatus = fork()) < 0)
 				sleep(1);
 
-			//å­è¿›ç¨‹å¤„ç†ä¸clientç«¯çš„äº¤äº’
+			//×Ó½ø³Ì´¦ÀíÓëclient¶ËµÄ½»»¥
 			if (forkStatus == 0)
 			{
 
 				printf("Client %d connected!\n", client_num);
 
-				/* ç™»å½•åˆå§‹åŒ–ï¼Œå¤„ç†ç”¨æˆ·ç™»å½•æ—¶çš„è®¤è¯ã€æ”¹å¯† ï¼Œå¹¶è·å–username*/
+				/* µÇÂ¼³õÊ¼»¯£¬´¦ÀíÓÃ»§µÇÂ¼Ê±µÄÈÏÖ¤¡¢¸ÄÃÜ £¬²¢»ñÈ¡username*/
 				initLogin(&connect_fd, mysql, username, client_num);
 
-				/* æ­£å¼èŠå¤©è¿‡ç¨‹ï¼šç›´æ¥è½¬å‘çˆ¶è¿›ç¨‹ä¸clientç«¯çš„å¸§ */
+				/* ÕıÊ½ÁÄÌì¹ı³Ì£ºÖ±½Ó×ª·¢¸¸½ø³ÌÓëclient¶ËµÄÖ¡ */
 				interactBridge(&connect_fd, mysql, username, client_num);
 
 				exit(0);
 			}
-			else if (forkStatus > 0) //çˆ¶è¿›ç¨‹
+			else if (forkStatus > 0) //¸¸½ø³Ì
 			{
 			}
 		}

@@ -1,10 +1,10 @@
 #include "ServerWriteLog.h"
 /***************************************************************************
-  å‡½æ•°åç§°ï¼šWriteFile
-  åŠŸ    èƒ½ï¼šå†™å…¥æ–‡ä»¶
-  è¾“å…¥å‚æ•°ï¼šæ–‡ä»¶åï¼Œç¼“å­˜åŒºï¼Œé•¿åº¦
-  è¿” å›ž å€¼ï¼š
-  è¯´    æ˜Žï¼š
+  º¯ÊýÃû³Æ£ºWriteFile
+  ¹¦    ÄÜ£ºÐ´ÈëÎÄ¼þ
+  ÊäÈë²ÎÊý£ºÎÄ¼þÃû£¬»º´æÇø£¬³¤¶È
+  ·µ »Ø Öµ£º
+  Ëµ    Ã÷£º
 ***************************************************************************/
 int WriteFile(char *FileName, char *buf, int buf_len)
 {
@@ -17,27 +17,27 @@ int WriteFile(char *FileName, char *buf, int buf_len)
     return fd;
 }
 /***************************************************************************
-  å‡½æ•°åç§°ï¼šStrTime
-  åŠŸ    èƒ½ï¼šå°†å½“å‰æ—¶é—´è½¬åŒ–ä¸ºå­—ç¬¦æ•°ç»„
-  è¾“å…¥å‚æ•°ï¼š
-  è¿” å›ž å€¼ï¼šå½“å‰æ—¶é—´å­—ç¬¦ä¸²æŒ‡é’ˆ
-  è¯´    æ˜Žï¼š
+  º¯ÊýÃû³Æ£ºStrTime
+  ¹¦    ÄÜ£º½«µ±Ç°Ê±¼ä×ª»¯Îª×Ö·ûÊý×é
+  ÊäÈë²ÎÊý£º
+  ·µ »Ø Öµ£ºµ±Ç°Ê±¼ä×Ö·û´®Ö¸Õë
+  Ëµ    Ã÷£º
 ***************************************************************************/
 int StrTime(char *TimeStr)
 {
     struct timespec time;
-    clock_gettime(CLOCK_REALTIME, &time); //èŽ·å–ç›¸å¯¹äºŽ1970åˆ°çŽ°åœ¨çš„ç§’æ•°
+    clock_gettime(CLOCK_REALTIME, &time); //»ñÈ¡Ïà¶ÔÓÚ1970µ½ÏÖÔÚµÄÃëÊý
     struct tm nowTime;
     localtime_r(&time.tv_sec, &nowTime);
     sprintf(TimeStr, "[%04d/%02d/%02d %02d:%02d:%02d] ", nowTime.tm_year + 1900, nowTime.tm_mon + 1, nowTime.tm_mday, nowTime.tm_hour, nowTime.tm_min, nowTime.tm_sec);
     return 1;
 }
 /***************************************************************************
-  å‡½æ•°åç§°ï¼šWriteReglog
-  åŠŸ    èƒ½ï¼šå°†ç™»é™†ä¿¡æ¯å†™å…¥æ—¥å¿—
-  è¾“å…¥å‚æ•°ï¼šç”¨æˆ·åï¼Œç™»é™†æˆåŠŸæˆ–å¤±è´¥åŽŸå› 
-  è¿” å›ž å€¼ï¼š
-  è¯´    æ˜Žï¼šæ—¥å¿—æ–‡ä»¶ä½äºŽlogæ–‡ä»¶å¤¹ä¸‹ï¼Œæ¯ä¸ªæ—¥å¿—æ–‡ä»¶çš„æ–‡ä»¶åä¸Žç”¨æˆ·ååŒå
+  º¯ÊýÃû³Æ£ºWriteReglog
+  ¹¦    ÄÜ£º½«µÇÂ½ÐÅÏ¢Ð´ÈëÈÕÖ¾
+  ÊäÈë²ÎÊý£ºÓÃ»§Ãû£¬µÇÂ½³É¹¦»òÊ§°ÜÔ­Òò
+  ·µ »Ø Öµ£º
+  Ëµ    Ã÷£ºÈÕÖ¾ÎÄ¼þÎ»ÓÚlogÎÄ¼þ¼ÐÏÂ£¬Ã¿¸öÈÕÖ¾ÎÄ¼þµÄÎÄ¼þÃûÓëÓÃ»§ÃûÍ¬Ãû
 ***************************************************************************/
 int WriteReglog(char *name,int RightorErrorType)
 {
@@ -70,11 +70,11 @@ int WriteReglog(char *name,int RightorErrorType)
     return 1;
 }
 /***************************************************************************
-  å‡½æ•°åç§°ï¼šWriteOfflinelog
-  åŠŸ    èƒ½ï¼šå°†ä¸‹çº¿ä¿¡æ¯å†™å…¥æ—¥å¿—
-  è¾“å…¥å‚æ•°ï¼šç”¨æˆ·å
-  è¿” å›ž å€¼ï¼š
-  è¯´    æ˜Žï¼šæ—¥å¿—æ–‡ä»¶ä½äºŽlogæ–‡ä»¶å¤¹ä¸‹ï¼Œæ¯ä¸ªæ—¥å¿—æ–‡ä»¶çš„æ–‡ä»¶åä¸Žç”¨æˆ·ååŒå
+  º¯ÊýÃû³Æ£ºWriteOfflinelog
+  ¹¦    ÄÜ£º½«ÏÂÏßÐÅÏ¢Ð´ÈëÈÕÖ¾
+  ÊäÈë²ÎÊý£ºÓÃ»§Ãû
+  ·µ »Ø Öµ£º
+  Ëµ    Ã÷£ºÈÕÖ¾ÎÄ¼þÎ»ÓÚlogÎÄ¼þ¼ÐÏÂ£¬Ã¿¸öÈÕÖ¾ÎÄ¼þµÄÎÄ¼þÃûÓëÓÃ»§ÃûÍ¬Ãû
 ***************************************************************************/
 int WriteOfflinelog(char *name)
 {
@@ -89,11 +89,11 @@ int WriteOfflinelog(char *name)
     return 1;
 }
 /***************************************************************************
-  å‡½æ•°åç§°ï¼šWriteChgPswdlog
-  åŠŸ    èƒ½ï¼šå°†ä¸‹çº¿ä¿¡æ¯å†™å…¥æ—¥å¿—
-  è¾“å…¥å‚æ•°ï¼šç”¨æˆ·å
-  è¿” å›ž å€¼ï¼š
-  è¯´    æ˜Žï¼šæ—¥å¿—æ–‡ä»¶ä½äºŽlogæ–‡ä»¶å¤¹ä¸‹ï¼Œæ¯ä¸ªæ—¥å¿—æ–‡ä»¶çš„æ–‡ä»¶åä¸Žç”¨æˆ·ååŒå
+  º¯ÊýÃû³Æ£ºWriteChgPswdlog
+  ¹¦    ÄÜ£º½«ÏÂÏßÐÅÏ¢Ð´ÈëÈÕÖ¾
+  ÊäÈë²ÎÊý£ºÓÃ»§Ãû
+  ·µ »Ø Öµ£º
+  Ëµ    Ã÷£ºÈÕÖ¾ÎÄ¼þÎ»ÓÚlogÎÄ¼þ¼ÐÏÂ£¬Ã¿¸öÈÕÖ¾ÎÄ¼þµÄÎÄ¼þÃûÓëÓÃ»§ÃûÍ¬Ãû
 ***************************************************************************/
 int WriteChgPswdlog(char *name)
 {
@@ -107,11 +107,11 @@ int WriteChgPswdlog(char *name)
     return 1;
 }
 /***************************************************************************
-  å‡½æ•°åç§°ï¼šWriteSendText
-  åŠŸ    èƒ½ï¼šå°†å‘é€ä¿¡æ¯äº‹ä»¶å†™å…¥æ—¥å¿—
-  è¾“å…¥å‚æ•°ï¼šå‘é€è€…ç”¨æˆ·åï¼ŒæŽ¥å—è€…ç”¨æˆ·å
-  è¿” å›ž å€¼ï¼š
-  è¯´    æ˜Žï¼šè‹¥æˆåŠŸå‘é€ï¼Œå°†äº‹ä»¶å†™å…¥å‘é€è€…å’ŒæŽ¥å—è€…æ—¥å¿—ï¼›è‹¥å¤±è´¥ï¼Œå°†äº‹ä»¶åŠåŽŸå› å†™å…¥å‘é€è€…æ—¥å¿—
+  º¯ÊýÃû³Æ£ºWriteSendText
+  ¹¦    ÄÜ£º½«·¢ËÍÐÅÏ¢ÊÂ¼þÐ´ÈëÈÕÖ¾
+  ÊäÈë²ÎÊý£º·¢ËÍÕßÓÃ»§Ãû£¬½ÓÊÜÕßÓÃ»§Ãû
+  ·µ »Ø Öµ£º
+  Ëµ    Ã÷£ºÈô³É¹¦·¢ËÍ£¬½«ÊÂ¼þÐ´Èë·¢ËÍÕßºÍ½ÓÊÜÕßÈÕÖ¾£»ÈôÊ§°Ü£¬½«ÊÂ¼þ¼°Ô­ÒòÐ´Èë·¢ËÍÕßÈÕÖ¾
 ***************************************************************************/
 int WriteSendText(char *SendName, char *RecvName, int RightorErrorType)
 {
@@ -152,11 +152,11 @@ int WriteSendText(char *SendName, char *RecvName, int RightorErrorType)
     return 1;
 }
 /***************************************************************************
-  å‡½æ•°åç§°ï¼šWriteAllLog
-  åŠŸ    èƒ½ï¼šå‘å…¨ä½“æˆå‘˜å‘é€æ•°æ®çš„æ—¥å¿—
-  è¾“å…¥å‚æ•°ï¼šç”¨æˆ·å
-  è¿” å›ž å€¼ï¼š
-  è¯´    æ˜Žï¼š
+  º¯ÊýÃû³Æ£ºWriteAllLog
+  ¹¦    ÄÜ£ºÏòÈ«Ìå³ÉÔ±·¢ËÍÊý¾ÝµÄÈÕÖ¾
+  ÊäÈë²ÎÊý£ºÓÃ»§Ãû
+  ·µ »Ø Öµ£º
+  Ëµ    Ã÷£º
 ***************************************************************************/
 int WriteAllLog(char*name)
 {

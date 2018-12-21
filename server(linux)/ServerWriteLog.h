@@ -7,29 +7,29 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include "ServerFrame.h"
-// //æ–‡æœ¬åº”ç­”å¸§çš„åº”ç­”ç±»å‹
+// //ÎÄ±¾Ó¦´ğÖ¡µÄÓ¦´ğÀàĞÍ
 // enum IdentifyTextType
 // {
-// 	SendSucc = 0,		//æˆåŠŸè½¬å‘
-// 	GramWrong = 0xFF,	//è¯­æ³•é”™è¯¯
-// 	FriNotExist = 0xFE,	//å¥½å‹åç§°ä¸å­˜åœ¨
-// 	FriOffLine = 0xFD	//å¥½å‹å·²ä¸‹çº¿
+// 	SendSucc = 0,		//³É¹¦×ª·¢
+// 	GramWrong = 0xFF,	//Óï·¨´íÎó
+// 	FriNotExist = 0xFE,	//ºÃÓÑÃû³Æ²»´æÔÚ
+// 	FriOffLine = 0xFD	//ºÃÓÑÒÑÏÂÏß
 // };
-// //æŠ¥é“åº”ç­”å¸§çš„åº”ç­”ç±»å‹
+// //±¨µÀÓ¦´ğÖ¡µÄÓ¦´ğÀàĞÍ
 // enum IdentifyResultType
 // {
-// 	Right = 0,			//æ­£ç¡®
-// 	SecretErr,			//å¯†ç é”™è¯¯
-// 	NameNoExist,		//ç”¨æˆ·ä¸å­˜åœ¨
-// 	NeedUpdateSecret	//éœ€è¦æ”¹å¯†
+// 	Right = 0,			//ÕıÈ·
+// 	SecretErr,			//ÃÜÂë´íÎó
+// 	NameNoExist,		//ÓÃ»§²»´æÔÚ
+// 	NeedUpdateSecret	//ĞèÒª¸ÄÃÜ
 // };
-//å°†ç™»é™†ä¿¡æ¯å†™å…¥æ—¥å¿—
+//½«µÇÂ½ĞÅÏ¢Ğ´ÈëÈÕÖ¾
 int WriteReglog(char *name,int RightorErrorType);
-//å°†ä¸‹çº¿ä¿¡æ¯å†™å…¥æ—¥å¿—
+//½«ÏÂÏßĞÅÏ¢Ğ´ÈëÈÕÖ¾
 int WriteOfflinelog(char *name);
-//å°†æ”¹å¯†ä¿¡æ¯å†™å…¥æ—¥å¿—
+//½«¸ÄÃÜĞÅÏ¢Ğ´ÈëÈÕÖ¾
 int WriteChgPswdlog(char *name);
-//å°†å‘é€ä¿¡æ¯äº‹ä»¶å†™å…¥æ—¥å¿—
+//½«·¢ËÍĞÅÏ¢ÊÂ¼şĞ´ÈëÈÕÖ¾
 int WriteSendText(char *SendName, char *RecvName, int RightorErrorType);
-//å…¬å…±ä¿¡æ¯æ—¥å¿—
+//¹«¹²ĞÅÏ¢ÈÕÖ¾
 int WriteAllLog(char*name);
