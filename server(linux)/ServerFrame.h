@@ -18,7 +18,8 @@ enum IdentifyResultType
 	Right=1,
 	SecretErr,
 	NameNoExist,
-	NeedUpdateSecret
+	NeedUpdateSecret,
+	TextFrameRecvFail
 };
 //文本应答帧的应答类型
 enum IdentifyTextType

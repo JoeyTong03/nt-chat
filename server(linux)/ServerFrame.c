@@ -122,7 +122,7 @@ int CrtTextReplyFrame(int ReplyType, char **TextReplyFrame)
 ***************************************************************************/
 int CrtTextFrame(char *name, char *text, char **TextFrame)
 {
-	uint16_t FrameLength = (uint16_t)strlen(name) + strlen(text) + 7;
+	uint16_t FrameLength = (uint16_t)strlen(name) + strlen(text) + 8;
 	*TextFrame = (char *)malloc(FrameLength * sizeof(char));
 	memset(*TextFrame, 0, FrameLength);
 	(*TextFrame)[0] = (char)0x77;

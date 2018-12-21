@@ -218,6 +218,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 	char *text;
 	int frameType = 0; //从子进程对应的客户端收到的帧的类型
 
+	int replyType=Right;
 	while (1)
 	{
 		/* 查看是否有数据需要发送给该子进程对应的客户端 */
@@ -228,7 +229,8 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 		{
 			uint16_t len=0;
 			memcpy(&len,&(sendBuf[i][2]),2);
-
+			
+			
 			if (send(*connect_fd, sendBuf[i], len, 0) < 0)
 			{
 				printf("Send error!\n");
@@ -237,7 +239,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 
 			printf("[others send to %s]:\n", username);
 			Str2int2(sendBuf[i],len);
-			usleep(10);
+			
 		}
 
 		/* 查看子进程对应的客户端是否有数据要发送 */
@@ -285,8 +287,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				 * 发来的文本信息帧 帧头4字节 [0]-0x12 [1]-0x0 [2:3]-帧长，信息开始表示发送方@张三 '\0' 之后是信息
 				 * 要发出去的文本信息帧
 				 *********************************/
-
-				//int msglen=CrtTextFrame(username, recvBuf, &msg);
+				 
 				analysisSfhText(recvBuf,targetUsername,&text);
 				CrtTextFrame(username, text, &msg);
 				
@@ -307,6 +308,16 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 					Str2int2(msg,msglen);
 					WriteSendText(username, targetUsername, 0); //0是发送成功或失败的类型
 				}
+				
+				/* 发送文本信息应答帧 */
+				replyType=Right;
+				CrtTextReplyFrame(replyType,&msg);
+				if (send(*connect_fd, msg, 4, 0) < 0)
+				{
+					printf("Send textReply error!\n");
+					return -3;
+				}
+				printf("%s send textReply successfully!\n",username);
 			}
 		}
 	}
