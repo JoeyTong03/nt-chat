@@ -152,11 +152,11 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 
 	/* 更新在线用户 */
 	AddOnlineUser(mysql, username, client_num);
-	printf("user:%s finish - addonlineuser\n", username);
+//	printf("user:%s finish - addonlineuser\n", username);
 
 	/* 将登陆信息写入日志，包括成功/失败 */
 	//WriteReglog(username, replyType);
-	printf("user:%s finish - writelog\n", username);
+//	printf("user:%s finish - writelog\n", username);
 
 	/* 如果需要修改密码，等待客户端发送SfhChangeSecret帧，并获取其中的密码，更新数据库 */
 	if (replyType == NeedUpdateSecret)
@@ -168,16 +168,16 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 		printf("Change keyword end\n");
 	}
 
-	printf("user:%s finish - updatekeyword\n", username);
+//	printf("user:%s finish - updatekeyword\n", username);
 
 	/* 给该客户端发送好友初始化帧 */
 	char *nameList = GetAllUsers(mysql);
-	printf("user:%s finish - getalluser\n", username);
+//	printf("user:%s finish - getalluser\n", username);
 
 	char *friInitFrame;
 	int friInitFrame_length;
 	friInitFrame_length = CrtFriInit(nameList, &friInitFrame);
-	printf("user:%s finish - crtfriInit\n", username);
+//	printf("user:%s finish - crtfriInit\n", username);
 
 	if (send(*connect_fd, friInitFrame, friInitFrame_length, 0) < 0)
 	{
@@ -185,18 +185,19 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 		close(*connect_fd);
 		return -5;
 	}
-	printf("user:%s finish - send friend init frame\n", username);
+//	printf("user:%s finish - send friend init frame\n", username);
 
-	printf("user:%s - len:%d - nameList:\n", username, friInitFrame_length);
-	Str2int2(friInitFrame, friInitFrame_length);
-	printf("\n\n");
+//	printf("user:%s - len:%d - nameList:\n", username, friInitFrame_length);
+//	Str2int2(friInitFrame, friInitFrame_length);
+//	printf("\n\n");
+
+	printf("send online frame begin \n");
 
 	/* 给其他用户发送该用户的上线帧 */
 	sendOnlineFrame(mysql, username);
 
-	while (1)
-		sleep(1);
 
+	printf("init Login end\n");
 	return 0;
 }
 
@@ -224,6 +225,8 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 	{
 		/* 查看是否有数据需要发送给该子进程对应的客户端 */
 		sendCount = GetSendMessage(mysql, username, &sendBuf);
+
+		printf("user: %s sendcount: %d",username,sendCount);
 
 		int i;
 		for (i = 0; i < sendCount; i++)
@@ -396,12 +399,16 @@ int sendOnlineFrame(MYSQL *mysql, char username[])
 	int onlineFrame_length;
 	onlineFrame_length = CrtOnLineFrame(username, &onlineFrame); //函数内部申请空间
 
-	printf("The online-frame is ");
-	Str2int2(onlineFrame, onlineFrame_length);
-	printf("\n");
+	// printf("The online-frame is ");
+	// Str2int2(onlineFrame, onlineFrame_length);
+	// printf("\n");
 
 	/* 将上线帧发送给所有用户 */
 	toAllUsers(mysql, username, onlineFrame);
+
+	free(onlineFrame);
+
+	printf("onlineFrame\n");
 	return 0;
 }
 
