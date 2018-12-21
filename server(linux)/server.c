@@ -215,6 +215,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 	char targetUsername[20];
 	int isToALL = 0;   //是否是发给所有用户
 	char *msg;		   //子进程对应的客户端准备发送的数据帧
+	char *text;
 	int frameType = 0; //从子进程对应的客户端收到的帧的类型
 
 	while (1)
@@ -262,7 +263,10 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				close(*connect_fd);
 				return -3;
 			}
+			
 
+			
+			
 			frameType = getType(recvBuf);
 
 			if (frameType == SfhOnLine || frameType == SfhOffLine)
@@ -282,13 +286,16 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				 * 要发出去的文本信息帧
 				 *********************************/
 
-				int msglen=CrtTextFrame(username, recvBuf, &msg);
-				printf("msglen:%d\n",msglen);
-
-				isToALL = 0;
-				getTargetUsername(recvBuf, targetUsername, &isToALL);
-
-				if (isToALL)
+				//int msglen=CrtTextFrame(username, recvBuf, &msg);
+				analysisSfhText(recvBuf,targetUsername,&text);
+				CrtTextFrame(username, text, &msg);
+				
+				uint16_t msglen=0;
+				printf("%s is going to send:",username);
+				msglen=getMsgLen(msg);
+				Str2int2(msg,msglen);
+				
+				if (strcmp(targetUsername,"all")==0)
 				{
 					toAllUsers(mysql, username, msg);
 					WriteAllLog(username);
@@ -389,15 +396,6 @@ int changeSecret(int *connect_fd, MYSQL *mysql, char username[])
 	return 0;
 }
 
-/* 如果是给所有用户的，则isToALL=1;否则通过targetUsername返回目标用户名 */
-int getTargetUsername(char buf[], char targetUsername[], int *isToALL)
-{
-	strcpy(targetUsername, buf + 5);
-	if (strcmp(targetUsername, "all") == 0)
-		*isToALL = 1;
-
-	return 0;
-}
 
 int sendOnlineFrame(MYSQL *mysql, char username[])
 {
@@ -422,28 +420,6 @@ int sendOnlineFrame(MYSQL *mysql, char username[])
 
 int toAllUsers(MYSQL *mysql, char username[], char *msg)
 {
-	// char *p;
-	// char *allUserText = NULL; //所有在线用户，格式：“@name1@name2....#”
-	// char targetUsername[20];
-	// int isEnd = 0;
-	// int len = 0;
-	// allUserText = GetAllOnlineUsers(mysql);
-	// p = allUserText + 1; //避开第一个@
-	// while (1)
-	// {
-	// 	len = myfind(p, '@', &isEnd);
-	// 	strncpy(targetUsername, p, len);
-	// 	p += (len + 1);
-	// 	if (strcmp(targetUsername, username) == 0)
-	// 		continue;
-	// 	SetMessageToDB(mysql, username, targetUsername, msg);
-	// 	if (isEnd == 1)
-	// 		break;
-	// 	printf("[%s send data to %s]:", username, targetUsername);
-	// 	uint16_t frameLen = getMsgLen(msg);
-	// 	Str2int2(msg, frameLen);
-	// 	printf("\n");
-	// }
 
 	int i = 0;
 
