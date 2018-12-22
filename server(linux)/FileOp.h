@@ -1,13 +1,30 @@
+#pragma once
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <fstream>
 #include <time.h>
+#include <direct.h>//ÓÃÓÚ´´½¨ÎÄ¼ş¼Ğ
+#include <cstring>
 #define FILESIZE 10*1024*1024
 #define BLOCKSIZE 1000
+#define MAXDIRNAMELEN 128
 struct MyFile
 {
-	char* head = NULL;
+	char* textHead = NULL;
 	unsigned int fileLength;
 };
 
-//å°†æ–‡ä»¶_filenameä¸­çš„å†…å®¹è¯»å–åˆ°_myfile->headä¸­,å°†é•¿åº¦è¯»å–åˆ°_myfile->filelengthä¸­
+//½«ÎÄ¼ş_filenameÖĞµÄÄÚÈİ¶ÁÈ¡µ½_myfile->headÖĞ,½«³¤¶È¶ÁÈ¡µ½_myfile->filelengthÖĞ
 int readFileIn(const char _filename[], MyFile* _myfile);
+
+/*¸ù¾İÂ·¾¶×Ö·û´®´´½¨Ò»¡¢¶à¼¶Ä¿Â¼*/
+int createMultiFileList(char *strDirPath);
+
+//¸ù¾İÔ´ÓÃ»§Ãû¡¢Ä¿±êÓÃ»§Ãû¡¢ÎÄ¼şÃûµ÷ÓÃcreateMultiFileList»ñ´´½¨¶ÔÓ¦µÄÄ¿Â¼£¬Ä¿Â¼ÃûÎª£ºÔ´ÓÃ»§Ãû-Ä¿±êÓÃ»§Ãû-ÎÄ¼şÃû
+int mkDir(char _sourceUsername[], char _targetUsername[], char _fileName[], char dirName[]);
+
+//½«½ÓÊÕµ½µÄ(0,1000]×Ö½ÚµÄÊı¾İĞ´Èë±¾µØÁÙÊ±ÎÄ¼şÖĞ
+int saveToLocalTemp(char _dirName[],unsigned int _serialNumber, char* _text, unsigned int _fileLength);
+
+//½«ÁÙÊ±ÎÄ¼şÕûºÏ³ÉÒ»Õû¸öÎÄ¼şps:½Ó¿Ú»¹Ã»Éè¼ÆÍêÈ«.....
+int combineTmpFiles(char goalFilePath[], unsigned int tmpFilesNum);
