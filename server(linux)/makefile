@@ -1,13 +1,13 @@
 #test1-1 test1-2 makefile
 
-compiler=gcc
+compiler=g++
 
 SRCS :=$(wildcard *.c)
 TARGET := server
 OBJDIR = .
 
 .c:
-	gcc $(SRCS) -o $(TARGET) -I/usr/include/mysql -L/usr/lib64/mysql -lmysqlclient
+	g++ $(SRCS) -o $(TARGET) -I/usr/include/mysql -L/usr/lib64/mysql -lmysqlclient
 #	$(compiler) -o $@ $<
 
 all:$(TARGET) cleano
