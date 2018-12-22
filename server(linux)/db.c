@@ -2,6 +2,7 @@
 
 #include "db.h"
 #include <stdint.h>
+#include <stdlib.h>
 
 //初始化数据库
 enum RETURNTYPE InitDatabase(MYSQL **_mysql)
@@ -10,7 +11,7 @@ enum RETURNTYPE InitDatabase(MYSQL **_mysql)
     if ((*_mysql = mysql_init(NULL)) == NULL)
     {
         printf("mysql_init failed\n");
-        return -1;
+        return FALSE;
     }
 
     /* 连接数据库，失败返回NULL
@@ -46,7 +47,7 @@ enum RETURNTYPE JudgeFirstLog(MYSQL *_mysql, char *_username)
     if (mysql_query(_mysql, sql))
     {
         printf("mysql_query_connect failed(%s)", mysql_error(_mysql));
-        return -1;
+        return FALSE;
     }
 
     /* 将查询结果存储起来，出现错误则返回NULL
@@ -54,7 +55,7 @@ enum RETURNTYPE JudgeFirstLog(MYSQL *_mysql, char *_username)
     if ((result = mysql_store_result(_mysql)) == NULL)
     {
         printf("mysql_store_result failed");
-        return -1;
+        return FALSE;
     }
 
     /* 循环读取所有满足条件的记录
@@ -79,7 +80,7 @@ enum RETURNTYPE JudgeFirstLog(MYSQL *_mysql, char *_username)
         if (mysql_query(_mysql, tmpsql))
         {
             printf("mysql_query_connect failed(%s)", mysql_error(_mysql));
-            return -1;
+            return FALSE;
         }
 
         /* 释放result */
@@ -114,7 +115,7 @@ int JudgeUser(MYSQL *_mysql, char *_username, char *_keyword)
     if (mysql_query(_mysql, sql))
     {
         printf("mysql_query_connect failed(%s)", mysql_error(_mysql));
-        return -1;
+        return FALSE;
     }
 
     /* 将查询结果存储起来，出现错误则返回NULL
@@ -122,7 +123,7 @@ int JudgeUser(MYSQL *_mysql, char *_username, char *_keyword)
     if ((result = mysql_store_result(_mysql)) == NULL)
     {
         printf("mysql_store_result failed");
-        return -1;
+        return FALSE;
     }
 
     /* 打印当前查询到的记录的数量 */
