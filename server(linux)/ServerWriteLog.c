@@ -163,10 +163,11 @@ int WriteAllLog(char*name)
     char time[30];
     char event[40];
     char message[70];
+    char allstr[]="all";
     StrTime(time);
     sprintf(event, "%s has sent a message to all users.\n", name);
     sprintf(message,"%s%s",time, event);
-    WriteFile("all", message, strlen(message));
+    WriteFile(allstr, message, strlen(message));
     WriteFile(name, message, strlen(message));
     return 1;
 }

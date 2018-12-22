@@ -19,7 +19,7 @@
 #include <signal.h>
 #include <sys/prctl.h>//修改进程名
 #include <sys/msg.h> //消息队列
-
+#include <wait.h>
 
 #define BUFSIZE 1024
 #define LEN32	32	//32字节的帧

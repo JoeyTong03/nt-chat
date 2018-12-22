@@ -40,6 +40,10 @@ enum ReceiveFrameHeadType
 	RfhOnOffLine = 0x75,	//上/下线帧
 	RfhInit = 0x76			//好友初始化帧
 };
+
+void Str2int2(char *buf, int length);
+
+
 /********************C->S的帧解析部分*******************/
 //根据收到的帧，返回属于哪个帧类型：
 //返回值为统一的枚举值
