@@ -79,7 +79,7 @@ public:
 	//ÎÄ±¾Ö¡½âÎö
 	std::pair<QString, QString> AcceptText(char* TextFrame);
 	QString AcceptOnOffLineName(char* OnOffLineFrame);
-	QVector<QString> AcceptInitFri(QByteArray InitFriFrame);
+	QVector<QString> AcceptInitFri(char* InitFriFrame);
 		
 private slots:
 

@@ -3,6 +3,7 @@
 
 #include <QMessageBox>
 #include <QString>
+#include <string>
 
 ClientSocket::ClientSocket(QWidget *parent)
 	: QWidget(parent)
@@ -240,18 +241,41 @@ QString ClientSocket::AcceptOnOffLineName(char* OnOffLineFrame)
 返 回 值：
 说    明：
 ***************************************************************************/
-QVector<QString> ClientSocket::AcceptInitFri(char* InitFriFrame)
+QVector<QString> ClientSocket::AcceptInitFri(QByteArray InitFriFrame)
 {
 	QVector<QString> NameList;
-	uint8_t FriNum;
-	memcpy(&FriNum, InitFriFrame + 1, 1);
-	int startloc = 5;
-	for (int i = 0; i < FriNum; i++)
+
+	//好友的数量
+	uint8_t FriNum=0;
+	memcpy(&FriNum, InitFriFrame.data() + 1, 1);
+
+	//帧长
+	int len = InitFriFrame.length();
+
+	QByteArray tmp = InitFriFrame;
+	tmp.remove(0, 4);
+
+	std::string str=tmp.toStdString();
+	QString name;
+	for (int i = 1; i < str.length(); i++)
 	{
-		QString name = QString(QLatin1String(InitFriFrame + startloc));
-		NameList.push_back(name);
-		InitFriFrame += name.size() + 2;
+		if (str[i] == '@'||str[i]=='#')
+		{
+			NameList.push_back(name);
+			name.clear();
+
+			if (str[i] == '@')
+				continue;
+			else
+				break;
+		}
+
+		name += str[i];
+
 	}
+
+	NameList.push_back(name);
+
 	return NameList;
 }
 
@@ -281,9 +305,6 @@ void ClientSocket::onSocketReadyRead()
 	int length = data.length();
 	char* str = new char[length];
 	memcpy(str, data.data(), length);
-
-//	QMessageBox::about(NULL, "Hint", Str2int2(str, data.length()));
-
 
 	//解析不同帧
 	{
@@ -349,7 +370,7 @@ void ClientSocket::onSocketReadyRead()
 		//好友初始化帧
 		case 0x76:
 		{
-			QVector<QString>namelist = AcceptInitFri(str);
+			QVector<QString>namelist = AcceptInitFri(data);
 			Signal_InitFriend(namelist);
 			break;
 		}
