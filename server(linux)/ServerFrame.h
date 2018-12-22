@@ -3,7 +3,13 @@
 #include<stdlib.h>
 #include<stdint.h>
 #include<string.h>
-
+//S->C2的文本信息帧中判断群发或向个人发送标记
+//C收到来自S的文本信息帧，观察标志位[8-15]
+enum SglOrAll
+{
+	Single = 0x00,
+	All = 0x01
+};
 //解析报道帧时的结果类型
 enum IdentifyResultType
 {

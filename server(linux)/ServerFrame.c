@@ -116,16 +116,17 @@ int CrtTextReplyFrame(int ReplyType, char **TextReplyFrame)
 /***************************************************************************
 函数名称：CrtTextFrame
 功    能：生成文本信息帧（转发者用户名，文本信息）
-输入参数：文本信息源的用户名，文本信息，文本信息帧
+输入参数：文本信息源的用户名，文本信息，文本信息帧，群发标记
 返 回 值：帧的长度
 说    明：
 ***************************************************************************/
-int CrtTextFrame(char *name, char *text, char **TextFrame)
+int CrtTextFrame(char *name, char *text, char **TextFrame, uint8_t SingleOrAll)
 {
 	uint16_t FrameLength = (uint16_t)strlen(name) + strlen(text) + 7;
 	*TextFrame = (char *)malloc(FrameLength * sizeof(char));
 	memset(*TextFrame, 0, FrameLength);
 	(*TextFrame)[0] = (char)0x77;
+	memcpy((*TextFrame) + 1, &SingleOrAll, 1);
 	memcpy((*TextFrame) + 2, &FrameLength, 2);
 	(*TextFrame)[4] = '@';
 	memcpy((*TextFrame) + 5, name, strlen(name) + 1);
