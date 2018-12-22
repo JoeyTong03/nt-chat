@@ -30,23 +30,32 @@ enum IdentifyTextType
 //C->S帧类型
 enum SendFrameHeadType
 {
-	SfhRegister = 0x11,		//报到帧
-	SfhText = 0x12,			//文本信息帧
-	SfhChangeSecret = 0x15,	//改密帧
-	SfhOffLine = 0x16,		//下线帧
-	SfhOnLine=0x18			//上线帧
+	SfhRegister = 0x11,			//报到帧
+	SfhText = 0x12,				//文本信息帧
+	SfhChangeSecret = 0x15,		//改密帧
+	SfhOffLine = 0x16,			//下线帧
+	SfhOnLine = 0x18,			//上线帧
+	SfhFileHead = 0x20,			//文件信息帧1(传送文件名等文件头信息)
+	SfhFileBody = 0x21,			//文件信息帧2(传送文件内容)
+	SfhFileDownload = 0x22,		//下载通知帧(客户端请求下载)
+	SfhFileHeadReply = 0x23,	//文件信息帧1应答帧
+	SfhFileBodyReply = 0x24		//文本信息帧2应答帧
 };
 //S->C帧类型
 enum ReceiveFrameHeadType
 {
-	RfhRegister = 0x71,		//报到应答帧
-	RfhTextReply = 0x72,	//文本应答帧
-	RfhText = 0x77,			//文本信息帧
-	RfhBeKicked = 0x73,		//下线退位帧
-	RfhOnOffLine = 0x75,	//上/下线帧
-	RfhInit = 0x76			//好友初始化帧
+	RfhRegister = 0x71,			//报到应答帧
+	RfhTextReply = 0x72,		//文本应答帧
+	RfhText = 0x77,				//文本信息帧
+	RfhBeKicked = 0x73,			//下线退位帧
+	RfhOnOffLine = 0x75,		//上/下线帧
+	RfhInit = 0x76,				//好友初始化帧
+	RfhFileHeadReply = 0x80,	//文件信息帧1应答帧
+	RfhFileBodyReply = 0x81,	//文本信息帧2应答帧
+	RfhFileInform = 0x82,		//传输文件消息帧
+	RfhFileHead = 0x83,			//文件信息帧1(传送文件名等文件头信息)
+	RfhFileBody = 0x84			//文件信息帧2(传送文件内容)
 };
-
 void Str2int2(char *buf, int length);
 
 
