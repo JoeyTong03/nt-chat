@@ -1,11 +1,16 @@
 #pragma once
 
+#include <QWidget>
 #include <QTcpSocket>
-#include <QtEndian>
-#include <QVector>
 
-class ClientSocket
+class ClientSocket : public QWidget
 {
+	Q_OBJECT
+
+public:
+	ClientSocket(QWidget *parent = Q_NULLPTR);
+	~ClientSocket();
+
 private:
 
 	//发送帧类型
@@ -58,8 +63,6 @@ private:
 	QTcpSocket* socket;
 
 public:
-	ClientSocket();
-	~ClientSocket();
 
 	//Socket连接函数
 	bool connectServer();
@@ -73,14 +76,37 @@ public:
 	void SendChangeSecretFrame(const QString _secret)const;
 	void SendOffLineFrame()const;
 
-	//解析帧头函数
-	void AnlsFrame(char*buf);
-
 	//文本帧解析
-	QString AcceptText(char* TextFrame, QString&FromName);
+	std::pair<QString, QString> AcceptText(char* TextFrame);
 	QString AcceptOnOffLineName(char* OnOffLineFrame);
 	QVector<QString> AcceptInitFri(char* InitFriFrame);
+		
+private slots:
 
-	friend class MainWidget;
+	void onSocketDisconnected();	//信号槽函数，socket连接
+	void onSocketReadyRead();		//信号槽函数，socket有数据可读
+
+signals:
+
+	//报道应答帧返回信号 1-成功 2-密码错误 3-用户名不存在 4-需要改密 default:信息错误
+	void Signal_RegisterACK(char _type);
+
+	//文本信息应答帧返回信号 0x00 - 发送成功 0xFF - 信息语法有误 0xFE - 好友名称不存在 0xFD - 好友未上线
+	void Signal_SendTextACK(char _type);
+
+	//文本信息帧信号
+	void Signal_AcceptText(QString _text, QString _from);
+
+	//下线退位帧信号
+	void Signal_Abdication();
+
+	//好友上线帧信号
+	void Signal_FriendOnline(QString _user);
+
+	//好友下线帧信号
+	void Signal_FriendOffline(QString _user);
+
+	//好友初始化信号
+	void Signal_InitFriend(QVector<QString> _userlist);
 };
 
