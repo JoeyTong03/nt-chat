@@ -1,4 +1,3 @@
-/* FileOp.h */
 #include <iostream>
 #include <fstream>
 #include <time.h>
@@ -6,8 +5,9 @@
 #define BLOCKSIZE 1000
 struct MyFile
 {
-	char* head=NULL;
-	unsigned int filelength;
+	char* head = NULL;
+	unsigned int fileLength;
 };
 
-int readFileIn(const char _filename[], MyFile* _myfile,unsigned int* _filesize);
+//将文件_filename中的内容读取到_myfile->head中,将长度读取到_myfile->filelength中
+int readFileIn(const char _filename[], MyFile* _myfile);
