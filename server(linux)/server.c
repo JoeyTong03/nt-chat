@@ -313,7 +313,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				}
 				printf("server send textReply to %s successfully!\n", username);
 
-				CrtTextFrame(username, text, &msg);
+				
 
 				uint16_t msglen = 0;
 				printf("%s is going to send:", username);
@@ -322,11 +322,13 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 
 				if (strcmp(targetUsername, "all") == 0)
 				{
+					CrtTextFrame(username, text, &msg,All);
 					toAllUsers(mysql, username, msg);
 					//WriteAllLog(username);
 				}
 				else
 				{
+					CrtTextFrame(username, text, &msg,Single);
 					SetMessageToDB(mysql, username, targetUsername, msg);
 					printf("[%s send data to %s]:\n", username, targetUsername);
 					Str2int2(msg, msglen);
