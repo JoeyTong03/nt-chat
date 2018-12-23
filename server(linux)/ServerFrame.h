@@ -82,7 +82,7 @@ int initReplyFrame(int replyType, char**replyFrame);
 int CrtTextReplyFrame(int replyType, char**TextReplyFrame);
 
 //生成文本信息帧（转发者用户名，文本信息）
-int CrtTextFrame(char*name, char*text, char**TextFrame);
+int CrtTextFrame(char *name, char *text, char **TextFrame, uint8_t SingleOrAll);
 
 //生成下线退位帧
 int CrtOffLineFrame(char**OffLineFrame);
