@@ -280,7 +280,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 
 			frameType = getType(recvBuf);
 
-			if (frameType == SfhOnLine || frameType == SfhOffLine)
+			/* if (frameType == SfhOnLine || frameType == SfhOffLine)
 			{
 				toAllUsers(mysql, username, recvBuf);
 				if (frameType == SfhOffLine)
@@ -289,6 +289,19 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 					DelOnlineUser(mysql, username);
 					//WriteOfflinelog(username);
 				}
+			} */
+			if(frameType == SfhOnLine)
+			{
+				toAllUsers(mysql, username, recvBuf);
+			}
+			else if(frameType == SfhOffLine)
+			{
+				CrtOnOffFrame(username,0,&msg);
+				toAllUsers(mysql,username,msg);
+				printf("User %s offline!\n", username);
+				DelOnlineUser(mysql, username);
+				//WriteOfflinelog(username);
+		
 			}
 			else if (frameType == SfhText)
 			{
