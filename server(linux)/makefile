@@ -2,7 +2,7 @@
 
 compiler=g++
 
-SRCS :=$(wildcard *.c)
+SRCS :=$(wildcard *.c *.cpp)
 TARGET := server
 OBJDIR = .
 

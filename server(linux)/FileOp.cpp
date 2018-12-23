@@ -15,7 +15,7 @@ int readFileIn(const char _filename[], MyFile* _myfile)
 	if (!infile.is_open())
 	{
 		cout << "error opening file"; 
-		exit(1);
+		return -1;
 	}
 
 	//获取文件长度
@@ -90,10 +90,31 @@ int saveToLocalTemp(char _dirName[], unsigned int _serialNumber, char* _text, un
 	return 0;
 }
 
-//将临时文件整合成一整个文件ps:接口还没设计完全.....
-int combineTmpFiles(char goalFilePath[], unsigned int tmpFilesNum)
+//将临时文件整合成一整个文件,goalFileName为目标文件名，tmpDirPath是临时文件的目录，如xxx-xxx-xxx
+int combineTmpFiles(char goalFileName[],char tmpDir[], unsigned int tmpFilesNum)
 {
+	char tmpFilePath[10];
+	char goalFilePath[32];
+	MyFile myfile;
 
+	sprintf(goalFilePath, "%s\\%s", tmpDir, goalFileName);
+	ofstream outfile(goalFilePath, ios::out | ios::binary | ios::app);
+	if (!outfile.is_open())
+	{
+		cout << goalFilePath << " open fail!" << endl;
+		return -1;
+	}
+
+	for (int i = 1; i <= tmpFilesNum; i++)
+	{
+		sprintf(tmpFilePath, "%s\\%d", tmpDir, i);
+		cout << tmpFilePath << endl;
+		readFileIn(tmpFilePath, &myfile);
+		outfile.write(myfile.textHead, myfile.fileLength);
+		delete[](myfile.textHead);
+	}
+	outfile.close();
+	return 0;
 }
 
 int main()
@@ -130,22 +151,29 @@ int main()
 	return 0;*/
 
 	/*测试mkDir函数*/
-	char sourceName[] = "Miao";
-	char targetName[] = "tong";
-	char fileName[] = "nt";
-	unsigned int serialNumber = 2;
-	unsigned int fileLenth = 18;
-	char *text;
-	char dirName[MAXDIRNAMELEN];
-	text = new(nothrow) char[fileLenth];
-	if (NULL == text)
-	{
-		cout << "alloc fail!\n" << endl;
-		return -1;
-	}
-	strcpy(text, "I AM A SUPER WOMAN");
-	mkDir(sourceName, targetName, fileName, dirName);
-	saveToLocalTemp(dirName, serialNumber, text, fileLenth);
-	delete[] text;
+	//char sourceName[] = "Miao";
+	//char targetName[] = "tong";
+	//char fileName[] = "nt";
+	//unsigned int serialNumber = 2;
+	//unsigned int fileLenth = 18;
+	//char *text;
+	//char dirName[MAXDIRNAMELEN];
+	//text = new(nothrow) char[fileLenth];
+	//if (NULL == text)
+	//{
+	//	cout << "alloc fail!\n" << endl;
+	//	return -1;
+	//}
+	//strcpy(text, "I AM A SUPER WOMAN");
+	//mkDir(sourceName, targetName, fileName, dirName);
+	//saveToLocalTemp(dirName, serialNumber, text, fileLenth);
+	//delete[] text;
+	//return 0;
+
+	/*测试combineTmpFiles*/
+	char tmpDir[] = "tmpFiles\\Miao-tong-nt";
+	char goalFileName[] = "nt";
+	unsigned int tmpFileNum = 4;
+	combineTmpFiles(goalFileName, tmpDir, tmpFileNum);
 	return 0;
 }

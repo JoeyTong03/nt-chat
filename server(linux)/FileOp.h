@@ -8,6 +8,7 @@
 #define FILESIZE 10*1024*1024
 #define BLOCKSIZE 1000
 #define MAXDIRNAMELEN 128
+
 struct MyFile
 {
 	char* textHead = NULL;
@@ -26,5 +27,5 @@ int mkDir(char _sourceUsername[], char _targetUsername[], char _fileName[], char
 //将接收到的(0,1000]字节的数据写入本地临时文件中
 int saveToLocalTemp(char _dirName[],unsigned int _serialNumber, char* _text, unsigned int _fileLength);
 
-//将临时文件整合成一整个文件ps:接口还没设计完全.....
-int combineTmpFiles(char goalFilePath[], unsigned int tmpFilesNum);
+//将临时文件整合成一整个文件,goalFileName为目标文件名，tmpDirPath是临时文件的目录，如xxx-xxx-xxx
+int combineTmpFiles(char goalFileName[], char tmpDir[], unsigned int tmpFilesNum);
