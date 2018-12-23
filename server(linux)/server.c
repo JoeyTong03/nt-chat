@@ -137,11 +137,9 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 		break;
 	case -3: //密码错误
 		replyType = SecretErr;
-		close(*connect_fd);
 		break;
 	case -4: //用户不存在
 		replyType = NameNoExist;
-		close(*connect_fd);
 		break;
 	case -5: //需要改密
 		replyType = NeedUpdateSecret;
@@ -280,28 +278,16 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 
 			frameType = getType(recvBuf);
 
-			/* if (frameType == SfhOnLine || frameType == SfhOffLine)
+			if (frameType == SfhOffLine)
 			{
-				toAllUsers(mysql, username, recvBuf);
+				CrtOnOffFrame(username,0,&msg);
+				toAllUsers(mysql, username, msg);
 				if (frameType == SfhOffLine)
 				{
 					printf("User %s offline!\n", username);
 					DelOnlineUser(mysql, username);
 					//WriteOfflinelog(username);
 				}
-			} */
-			if(frameType == SfhOnLine)
-			{
-				toAllUsers(mysql, username, recvBuf);
-			}
-			else if(frameType == SfhOffLine)
-			{
-				CrtOnOffFrame(username,0,&msg);
-				toAllUsers(mysql,username,msg);
-				printf("User %s offline!\n", username);
-				DelOnlineUser(mysql, username);
-				//WriteOfflinelog(username);
-		
 			}
 			else if (frameType == SfhText)
 			{
@@ -328,7 +314,7 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 				}
 				printf("server send textReply to %s successfully!\n", username);
 
-				
+				CrtTextFrame(username, text, &msg);
 
 				uint16_t msglen = 0;
 				printf("%s is going to send:", username);
@@ -337,13 +323,11 @@ int interactBridge(int *connect_fd, MYSQL *mysql, char username[], int client_nu
 
 				if (strcmp(targetUsername, "all") == 0)
 				{
-					CrtTextFrame(username, text, &msg,All);
 					toAllUsers(mysql, username, msg);
 					//WriteAllLog(username);
 				}
 				else
 				{
-					CrtTextFrame(username, text, &msg,Single);
 					SetMessageToDB(mysql, username, targetUsername, msg);
 					printf("[%s send data to %s]:\n", username, targetUsername);
 					Str2int2(msg, msglen);
