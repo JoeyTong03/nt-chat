@@ -675,13 +675,13 @@ void SetMessageToDB(MYSQL *_mysql, char *fromuser, char *touser, char *_msg)
 void encrypt(char source[],char **target)
 {
 	unsigned int length=strlen(source);
-	*target=(char *)malloc(length * sizeof(char));
+	*target=(char *)malloc((length+1) * sizeof(char));
+	strcpy(*target,source);
 	if(NULL==*target)
 	{
 		printf("Alloc fail!\n");
 		return;
 	}
-	char tmp;
 	for(int i=0;i<length-1;i+=2)
 	{
 		(*target)[i]=source[i+1];

@@ -137,9 +137,11 @@ int initLogin(int *connect_fd, MYSQL *mysql, char username[], int client_num)
 		break;
 	case -3: //密码错误
 		replyType = SecretErr;
+		close(*connect_fd);
 		break;
 	case -4: //用户不存在
 		replyType = NameNoExist;
+		close(*connect_fd);
 		break;
 	case -5: //需要改密
 		replyType = NeedUpdateSecret;

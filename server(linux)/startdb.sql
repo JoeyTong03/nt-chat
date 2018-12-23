@@ -15,9 +15,13 @@ Date: 2018-12-15 23:46:11
 -- ----------------------------
 -- Database structure for `GroupChat`
 -- ----------------------------
-drop Database if exists GroupChat;
+/* drop Database if exists GroupChat;
 create Database GroupChat;
-use GroupChat;
+use GroupChat; */
+
+drop db1551445 if exists db1551445;
+create Database db1551445;
+use db1551445;
 
 -- ----------------------------
 -- Table structure for `user`
@@ -33,9 +37,9 @@ create Table user(
 )character set=gbk;
 
 insert into user (username,keyword) values
-('MiaoMiaoYang','123456'),
-('zhengxuanci' ,'123456'),
-('tongjiayan'  ,'123456');
+('MiaoMiaoYang','214365'),
+('zhengxuanci' ,'214365'),
+('tongjiayan'  ,'214365');
 
 -- ----------------------------
 -- Table structure for `onlineuser`
