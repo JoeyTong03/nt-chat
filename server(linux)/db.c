@@ -17,7 +17,7 @@ enum RETURNTYPE InitDatabase(MYSQL **_mysql)
     /* 连接数据库，失败返回NULL
        1、mysqld没运行
        2、没有指定名称的数据库存在 */
-    if (mysql_real_connect(*_mysql, "localhost", "root", "123456", "GroupChat", 0, NULL, 0) == NULL)
+    if (mysql_real_connect(*_mysql, "localhost", "u1551445", "u1551445", "db1551445", 0, NULL, 0) == NULL)
     {
         printf("mysql_real_connect failed(%s)", mysql_error(*_mysql));
         return FALSE;
