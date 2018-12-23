@@ -46,3 +46,6 @@ int GetSendMessage(MYSQL* _mysql,char* username,char*** _return);
 void SetMessageToDB(MYSQL* _mysql,char* fromuser,char* touser,char* msg);
 
 char *GetAllOnlineUsers(MYSQL *_mysql);
+
+//ÃÜÂë¼ÓÃÜ´æ´¢
+void encrypt(char source[],char **target);
