@@ -97,11 +97,16 @@ enum RETURNTYPE JudgeFirstLog(MYSQL *_mysql, char *_username)
 }
 
 //判断用户密码是否正确 1-正确 2-密码错误 3-用户名不存在 4-首次登陆需要改密[前提：用户名与密码正确]
+// _keyword是明文密码
 int JudgeUser(MYSQL *_mysql, char *_username, char *_keyword)
 {
     MYSQL_RES *result;
     MYSQL_ROW row;
 
+	/* 为明文密码加密 */
+	char *enKeyword;
+	encrypt(_keyword,&enKeyword);
+	
     /* 进行查询，成功返回0，不成功非0
     1、查询字符串存在语法错误
     2、查询不存在的数据表 */
@@ -110,7 +115,7 @@ int JudgeUser(MYSQL *_mysql, char *_username, char *_keyword)
         sql,
         "select count(username) from user where username='%s' and keyword='%s'",
         _username,
-        _keyword);
+        enKeyword);
 
     if (mysql_query(_mysql, sql))
     {
@@ -212,11 +217,15 @@ int JudgeUser(MYSQL *_mysql, char *_username, char *_keyword)
 //更新数据库username的密码为_keywork
 enum RETURNTYPE UpdateSecret(MYSQL *_mysql, char *_username, char *_keyword)
 {
+	/* 为明文密码加密 */
+	char *enKeyword;
+	encrypt(_keyword,&enKeyword);
+	
     char sql[200];
     sprintf(
         sql,
         "update user set keyword='%s' where username='%s'; ",
-        _keyword,
+        enKeyword,
         _username);
 
     if (mysql_query(_mysql, sql))
@@ -661,6 +670,27 @@ void SetMessageToDB(MYSQL *_mysql, char *fromuser, char *touser, char *_msg)
         return;
     }
 };
+
+//密码加密存储
+void encrypt(char source[],char **target)
+{
+	unsigned int length=strlen(source);
+	*target=(char *)malloc(length * sizeof(char));
+	if(NULL==*target)
+	{
+		printf("Alloc fail!\n");
+		return;
+	}
+	char tmp;
+	for(int i=0;i<length-1;i+=2)
+	{
+		(*target)[i]=source[i+1];
+		(*target)[i+1]=source[i];
+	}
+	return ;
+}
+
+
 
 //#define TESTDB
 #ifdef TESTDB
