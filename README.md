@@ -11,13 +11,13 @@
 
 When a friend is not on-line, there will show a label "off-line" . And when a friend newly up-line, all users who are his friends will get a message about it.
 
-![alt text](https://github.com/JoeyTong03/nt-chat/blob/master/img/list.png)
+<div align=center><img width="500" height="500" src="https://github.com/JoeyTong03/nt-chat/blob/master/img/lsit.png"/></div>
 
 ### Communicate window
 
 When he/she is on-line, you can send your message or file(no bigger than 1GB) to him/her.
 
-![alt text](https://github.com/JoeyTong03/nt-chat/blob/master/img/communicate-window.png)
+<div align=center><img width="500" height="500" src="https://github.com/JoeyTong03/nt-chat/blob/master/img/communicate-window.png"/></div>
 
 ## Server
 
