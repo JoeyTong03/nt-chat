@@ -13,7 +13,7 @@ Double click `client/exe/QtClient.exe`
 
 ### UI Logic
 
-<div align=center><img width="500" height="500" src="https://github.com/JoeyTong03/nt-chat/blob/master/img/client-UI.png"/></div>
+<div align=center><img src="https://github.com/JoeyTong03/nt-chat/blob/master/img/client-UI.png"/></div>
 
 #### log-in
 
