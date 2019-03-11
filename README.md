@@ -5,7 +5,7 @@
 
 ### log-in
 
-![alt text|828*739,10%](https://github.com/JoeyTong03/nt-chat/blob/master/img/log-in.png)
+<img src="https://github.com/JoeyTong03/nt-chat/blob/master/img/log-in.png" width=375>
 
 ### friend list
 
