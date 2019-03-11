@@ -11,6 +11,10 @@
 
 Double click `client/exe/QtClient.exe`
 
+### UI Logic
+
+<div align=center><img width="500" height="500" src="https://github.com/JoeyTong03/nt-chat/blob/master/img/client-UI.png"/></div>
+
 #### log-in
 
 <div align=center><img width="500" height="500" src="https://github.com/JoeyTong03/nt-chat/blob/master/img/log-in.png"/></div>
@@ -34,3 +38,7 @@ When he/she is on-line, you can send your message or file(no bigger than 1GB) to
 1. Copy directory `server` to the server (Linux)
 2. Under this directory, execute the command line `make` to compile the resource code, then there will be a executable file  `server`
 3. Run server
+
+### Server flow
+
+<div align=center><img width="500" src="https://github.com/JoeyTong03/nt-chat/blob/master/img/server-flow.png"/></div>
